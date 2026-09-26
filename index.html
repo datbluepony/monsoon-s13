@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Virtual test bench for the MONSOON S13 1993 240SX wiper / washer controller">
+<title>Monsoon S13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --surface-2: #e3e8ee;
+  --ink: #15202b;
+  --ink-soft: #4a5866;
+  --line: #cfd7e0;
+  --accent: #1f5fd1;
+  --accent-ink: #ffffff;
+  --amber: #c98a0c;
+  --amber-glow: rgba(233, 164, 23, 0.35);
+  --ok: #1f8a4c;
+  --bad: #c2362c;
+  --off: #b7c1cc;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0d131a; --surface: #151e28; --surface-2: #1d2935; --ink: #e4ebf2; --ink-soft: #9aabbb;
+    --line: #2a3846; --accent: #5b8def; --accent-ink: #0d131a; --amber: #f2b33d;
+    --amber-glow: rgba(242, 179, 61, 0.35); --ok: #4cc27f; --bad: #ef6a5f; --off: #3a4857;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d131a; --surface: #151e28; --surface-2: #1d2935; --ink: #e4ebf2; --ink-soft: #9aabbb;
+  --line: #2a3846; --accent: #5b8def; --accent-ink: #0d131a; --amber: #f2b33d;
+  --amber-glow: rgba(242, 179, 61, 0.35); --ok: #4cc27f; --bad: #ef6a5f; --off: #3a4857;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 24px 60px; }
+header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+h1 { font: 700 34px/1 var(--display); letter-spacing: 0.04em; margin: 0; }
+h1 span { color: var(--accent); }
+.sub { color: var(--ink-soft); margin: 6px 0 0; font-size: 14px; }
+.status { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 12px/1 var(--mono); padding: 6px 9px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); white-space: nowrap; }
+.chip.done::before { content: "\2713  "; color: var(--ok); }
+.chip.todo::before { content: "\25CB  "; color: var(--amber); }
+nav { display: flex; flex-wrap: wrap; gap: 4px; margin: 22px 0 18px; border-bottom: 1px solid var(--line); }
+nav button { font: 600 14px var(--body); color: var(--ink-soft); background: none; border: 0; padding: 10px 14px; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+nav button:focus-visible, button:focus-visible, input:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+h2 { font: 700 20px/1.2 var(--display); letter-spacing: 0.03em; margin: 0 0 10px; text-wrap: balance; }
+h3 { font: 600 15px/1.3 var(--body); margin: 18px 0 6px; }
+p, li { max-width: 68ch; }
+.lead { color: var(--ink-soft); margin-top: 0; }
+code, .mono { font-family: var(--mono); font-size: 0.92em; }
+
+/* Simulator */
+.sim { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .sim { grid-template-columns: 1fr; } }
+.stage { background: #0b1118; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+canvas { display: block; width: 100%; aspect-ratio: 16 / 9; }
+.lamps { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; margin-top: 10px; }
+.lamp { display: flex; align-items: center; gap: 9px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+.lamp i { width: 12px; height: 12px; border-radius: 50%; background: var(--off); flex: none; transition: background .08s, box-shadow .08s; }
+.lamp.on i { background: var(--amber); box-shadow: 0 0 0 4px var(--amber-glow); }
+.lamp.bad i { background: var(--bad); box-shadow: 0 0 0 4px rgba(194,54,44,.25); }
+.lamp.good i { background: var(--ok); }
+.lamp b { display: block; font: 500 11px/1.2 var(--mono); color: var(--ink-soft); text-transform: uppercase; letter-spacing: .06em; }
+.lamp span { font: 600 13px/1.25 var(--body); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 16px; }
+.group > .label { font: 500 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); margin-bottom: 8px; display: flex; justify-content: space-between; gap: 8px; }
+.seg { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { text-align: center; padding: 9px 0; font: 700 14px var(--display); letter-spacing: .05em; cursor: pointer; background: var(--surface-2); color: var(--ink-soft); border-left: 1px solid var(--line); }
+.seg label:first-of-type { border-left: 0; }
+.seg input:checked + label { background: var(--accent); color: var(--accent-ink); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+.hold { flex: 1 1 120px; font: 700 14px var(--display); letter-spacing: .05em; padding: 11px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); cursor: pointer; user-select: none; touch-action: none; }
+.hold.active { background: var(--amber); color: #1b1300; border-color: var(--amber); }
+.hold small { display: block; font: 400 11px var(--body); color: inherit; opacity: .75; letter-spacing: 0; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.ring-read { font: 500 13px var(--mono); color: var(--ink); }
+.toggles { display: grid; gap: 7px; }
+.tg { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; }
+.tg input { width: 34px; height: 18px; appearance: none; background: var(--off); border-radius: 9px; position: relative; cursor: pointer; flex: none; transition: background .12s; }
+.tg input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: left .12s; }
+.tg input:checked { background: var(--accent); }
+.tg input:checked::after { left: 18px; }
+.tg.warn input:checked { background: var(--bad); }
+.state { font: 400 12.5px/1.6 var(--mono); display: grid; grid-template-columns: auto 1fr; gap: 1px 12px; }
+.state dt { color: var(--ink-soft); }
+.state dd { margin: 0; font-variant-numeric: tabular-nums; }
+.serial { margin-top: 18px; background: #081018; color: #9fe3b0; font: 12px/1.5 var(--mono); border-radius: 8px; padding: 12px 14px; min-height: 120px; max-height: 220px; overflow: auto; white-space: pre; border: 1px solid var(--line); }
+.serial .hint { color: #6d8797; }
+.help { font-size: 13.5px; color: var(--ink-soft); margin-top: 14px; }
+.help li { margin: 3px 0; }
+
+/* Docs */
+.doc { display: grid; gap: 22px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 11px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .07em; color: var(--ink-soft); background: var(--surface-2); }
+td.mono, td .mono { font-family: var(--mono); font-size: 12.5px; }
+tr.dnp td { color: var(--ink-soft); }
+.tag { display: inline-block; font: 500 11px/1 var(--mono); padding: 3px 6px; border-radius: 3px; background: var(--surface-2); color: var(--ink-soft); }
+.tag.hot { background: var(--amber); color: #1b1300; }
+a { color: var(--accent); }
+ol.steps { padding-left: 22px; }
+ol.steps li { margin: 8px 0; }
+.expect { color: var(--ok); font-weight: 600; }
+pre.mermaid { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; overflow-x: auto; }
+#stalk { display: block; width: 100%; height: auto; color: var(--ink); touch-action: none; user-select: none; border-radius: 8px; background: var(--surface-2); }
+#stalk:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .lamp i { transition: none; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>MONSOON <span>S13</span></h1>
+      <p class="sub">1993 240SX standalone wiper / washer controller &middot; v1.0 &middot; ATtiny1616 &middot; 120 &times; 85 mm</p>
+    </div>
+    <div class="status" aria-label="Project status">
+      <span class="chip done">Schematic</span>
+      <span class="chip done">PCB routed</span>
+      <span class="chip done">Firmware builds</span>
+      <span class="chip done">BOM</span>
+      <span class="chip todo">Gerbers</span>
+      <span class="chip todo">Connector photos</span>
+      <span class="chip todo">Motor current</span>
+    </div>
+  </header>
+
+  <nav role="tablist" aria-label="Sections">
+    <button role="tab" id="tab-sim" aria-selected="true" data-panel="p-sim">Virtual bench</button>
+    <button role="tab" id="tab-circuit" aria-selected="false" data-panel="p-circuit">How it works</button>
+    <button role="tab" id="tab-pins" aria-selected="false" data-panel="p-pins">Connectors</button>
+    <button role="tab" id="tab-bom" aria-selected="false" data-panel="p-bom">Parts</button>
+    <button role="tab" id="tab-prog" aria-selected="false" data-panel="p-prog">Programming</button>
+    <button role="tab" id="tab-bench" aria-selected="false" data-panel="p-bench">Real bench test</button>
+  </nav>
+
+  <!-- ============ SIMULATOR ============ -->
+  <section id="p-sim" role="tabpanel">
+    <div class="sim">
+      <div>
+        <div class="stage"><canvas id="glass" width="1280" height="720" aria-label="Animated windshield showing wiper blades, rain and washer spray"></canvas></div>
+        <div class="lamps">
+          <div class="lamp" id="l-motor"><i></i><div><b>Motor</b><span>Stopped</span></div></div>
+          <div class="lamp" id="l-park"><i></i><div><b>Auto-stop</b><span>Parked</span></div></div>
+          <div class="lamp" id="l-k1"><i></i><div><b>K1 run</b><span>Off</span></div></div>
+          <div class="lamp" id="l-k2"><i></i><div><b>K2 hi</b><span>Off</span></div></div>
+          <div class="lamp" id="l-k3"><i></i><div><b>K3 washer</b><span>Off</span></div></div>
+          <div class="lamp" id="l-led"><i></i><div><b>Board LED</b><span>Off</span></div></div>
+          <div class="lamp" id="l-v"><i></i><div><b>Supply J1</b><span>12.4 V</span></div></div>
+        </div>
+        <div class="serial" id="serial" aria-label="Serial monitor"><span class="hint">Serial monitor (115200). Turn on DIP 2 "Diagnostics" to see what the board prints.</span></div>
+      </div>
+
+      <div class="panel">
+        <div class="group toggles">
+          <label class="tg"><input type="checkbox" id="key" checked> Ignition on (key-on +12V at J1)</label>
+          <label class="tg"><input type="checkbox" id="engine"> Engine running (alternator 14.2 V)</label>
+          <div class="row">
+            <button class="hold" id="crank" type="button">CRANK<small>dip to 6.5 V for 1.2 s</small></button>
+            <button class="hold" id="spike" type="button">LOAD DUMP<small>80 V spike, TVS clamps</small></button>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="label"><span>Wiper stalk (FSM EL-17)</span><span id="stalk-pins">closed: 13&ndash;14</span></div>
+          <svg id="stalk" viewBox="0 0 380 210" role="group" aria-label="Wiper stalk. Drag the lever down for INT, LO and HI. Twist the ring. Hold the tip to pull for WASH.">
+            <defs>
+              <linearGradient id="lever-g" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#4a525b"/><stop offset=".45" stop-color="#2a3037"/><stop offset="1" stop-color="#15191e"/>
+              </linearGradient>
+              <linearGradient id="ring-g" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#5c6670"/><stop offset=".5" stop-color="#343b43"/><stop offset="1" stop-color="#1b2026"/>
+              </linearGradient>
+              <clipPath id="ring-clip"><rect x="212" y="-9" width="34" height="18" rx="3"/></clipPath>
+            </defs>
+            <rect x="0" y="22" width="58" height="92" rx="10" fill="#1d232a"/>
+            <rect x="6" y="28" width="46" height="80" rx="7" fill="#262d35"/>
+            <g id="detents" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500"></g>
+            <g id="lever" transform="rotate(0 50 62)">
+              <g id="lever-body" transform="translate(0 62)">
+                <path d="M44 -8 H286 Q304 -8 304 0 Q304 8 286 8 H44 Z" fill="url(#lever-g)" stroke="#0b0e11" stroke-width="1.5"/>
+                <g fill="#c9d2da" opacity=".85"><circle cx="196" cy="0" r="1.2"/><circle cx="202" cy="0" r="1.7"/><circle cx="208" cy="0" r="2.2"/></g>
+                <g id="ring-grp" style="cursor:ns-resize">
+                  <rect x="212" y="-9" width="34" height="18" rx="3" fill="url(#ring-g)" stroke="#0b0e11" stroke-width="1.5"/>
+                  <g id="ribs" clip-path="url(#ring-clip)" stroke="#11151a" stroke-width="1.6"></g>
+                  <circle id="ring-mark" cx="229" cy="0" r="2.2" fill="#f2b33d"/>
+                </g>
+                <g id="tip" style="cursor:grab">
+                  <circle cx="292" cy="0" r="13" fill="transparent"/>
+                  <text x="268" y="3.5" font-family="IBM Plex Mono, monospace" font-size="8" fill="#9fb0c0">WASH</text>
+                </g>
+              </g>
+            </g>
+            <circle cx="50" cy="62" r="7" fill="#11161b" stroke="#3a434d"/>
+            <text id="pull-hint" x="292" y="30" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="currentColor" opacity=".55">&#8601; pull</text>
+          </svg>
+          <div class="row" style="margin-top:6px">
+            <button class="hold" id="wash" type="button">WASH<small>hold = pull lever toward you</small></button>
+          </div>
+          <p class="help" style="margin:8px 0 0">Drag the lever or use &uarr;/&darr;. Twist the ring by dragging it, scrolling on it, or &larr;/&rarr;. This stalk has no MIST detent: flick OFF &rarr; LO &rarr; OFF for one wipe.</p>
+        </div>
+
+        <div class="group">
+          <div class="label"><span>Ring twist (pins 19&ndash;20)</span><span class="ring-read" id="ring-read"></span></div>
+          <input type="range" id="ring" min="14" max="950" value="300" step="1" aria-label="Intermittent ring resistance in ohms">
+        </div>
+
+        <div class="group toggles">
+          <div class="label"><span>DIP switch SW1</span></div>
+          <label class="tg"><input type="checkbox" id="dip1"> 1: two wipes after wash (off = three)</label>
+          <label class="tg"><input type="checkbox" id="dip2"> 2: diagnostics on serial</label>
+        </div>
+
+        <div class="group toggles">
+          <div class="label"><span>Test conditions</span></div>
+          <label class="tg"><input type="checkbox" id="fast"> Run twice as fast</label>
+          <label class="tg warn"><input type="checkbox" id="parkcut"> Fault: park wire (orange) disconnected</label>
+          <div>
+            <div class="label" style="margin-top:6px"><span>Rain</span></div>
+            <input type="range" id="rain" min="0" max="100" value="55" aria-label="Rain intensity">
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="label"><span>Firmware state</span></div>
+          <dl class="state" id="fwstate"></dl>
+        </div>
+      </div>
+    </div>
+    <ul class="help">
+      <li>The bench runs a line-for-line JavaScript copy of <code>s13_wiper.ino</code> on top of a model of the factory motor: ground-switched LO/HI brushes and an auto-stop contact that reads GND while sweeping and +12V at park.</li>
+      <li>Things to try: drag the stalk to INT and twist the ring. Flick OFF &rarr; LO &rarr; OFF for a single wipe. Switch HI to OFF mid-sweep and watch the blades still park. Hold WASH for three seconds, then turn the key off mid-sweep and back on. Cut the park wire while on LO to see the 8-second fault stop.</li>
+    </ul>
+  </section>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section id="p-circuit" role="tabpanel" hidden>
+    <div class="doc">
+      <div>
+        <h2>Signal and power flow</h2>
+        <p class="lead">One fused key-on 12V input feeds everything. The motor and pump side goes through the 20A blade fuse; the logic side through a reverse-polarity diode and an automotive 5V regulator.</p>
+<pre class="mermaid">
+flowchart LR
+  IN["J1 POWER<br/>+12V key-on, GND"] --> F1["F1<br/>20A blade fuse"]
+  IN --> TVS["D2 SMBJ26CA<br/>spike clamp"]
+  IN --> D1["D1<br/>reverse-polarity diode"]
+  D1 --> U1["U1 LM2936<br/>5V regulator"]
+  U1 --> MCU["U2 ATtiny1616"]
+  STALK["J4 factory stalk"] --> NET["Input network<br/>2.2k pull-up, 33k, 100nF"]
+  PARK["J2 pin 2<br/>motor auto-stop"] --> NET
+  NET --> MCU
+  MCU --> ULN["U3 ULN2003<br/>relay driver"]
+  ULN --> K1["K1 RUN"]
+  ULN --> K2["K2 LO/HI"]
+  ULN --> K3["K3 WASH"]
+  F1 --> MOTOR["J2 wiper motor<br/>common brush"]
+  K1 --> K2
+  K2 --> MOTOR
+  F1 --> K3
+  K3 --> PUMP["J3 washer pump"]
+</pre>
+      </div>
+
+      <div class="two">
+        <div class="card">
+          <h2>Motor switching</h2>
+<pre class="mermaid">
+flowchart LR
+  G["GND"] -- "K1 NO (energized)" --> R["RUN_OUT<br/>K1 common"]
+  P["Auto-stop OR<br/>GND sweeping, +12V parked"] -- "K1 NC (released)" --> R
+  R --> C["K2 common"]
+  C -- "K2 NC" --> LO["LO brush<br/>LG/B"]
+  C -- "K2 NO" --> HI["HI brush<br/>LG/R"]
+  V["+12V LG"] --> M["Common brush"]
+</pre>
+          <p>The S13 motor's common brush sits at +12V all the time. It runs when the LO or HI brush is pulled to ground. K1 energized grounds the brush directly. K1 released hands the brush to the auto-stop contact, which keeps it grounded until the blades reach park, then switches it to +12V, which brakes the motor.</p>
+          <p>Because of that, the firmware never has to "stop at park". Releasing K1 always finishes the sweep. It also means a key-off mid-sweep parks the blades as soon as power returns.</p>
+        </div>
+        <div class="card">
+          <h2>Reading the stalk</h2>
+          <p>The factory stalk has no electronics. Pin 17 is its common and goes to board ground, so each contact pulls its pin to 0V against a 2.2k pull-up. The INT ring is a 14&ndash;950&Omega; variable resistor from pin 19 to ground on the same kind of input, which reads 0.03&ndash;1.5V.</p>
+          <div class="tbl"><table>
+            <thead><tr><th>Position</th><th>Contacts (FSM EL-59)</th><th>Board sees</th></tr></thead>
+            <tbody>
+              <tr><td>OFF</td><td class="mono">13&ndash;14</td><td>nothing grounded</td></tr>
+              <tr><td>INT</td><td class="mono">13&ndash;14, 15&ndash;17</td><td class="mono">STK3 low</td></tr>
+              <tr><td>LO</td><td class="mono">14&ndash;17</td><td class="mono">STK2 low</td></tr>
+              <tr><td>HI</td><td class="mono">16&ndash;17</td><td class="mono">STK4 low</td></tr>
+              <tr><td>WASH</td><td class="mono">17&ndash;18</td><td class="mono">STK5 low</td></tr>
+              <tr><td>Ring</td><td class="mono">19&ndash;20</td><td class="mono">STK6 = 6&hellip;308 ADC</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Priorities and timing</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Priority</th><th>Request</th><th>What the board does</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>HI</td><td>K2 then K1 on. K1 is released for 60 ms whenever K2 changes over, so the contacts never switch under load.</td></tr>
+            <tr><td>2</td><td>LO</td><td>K1 on. The 1993 stalk has no MIST detent; a quick OFF &rarr; LO &rarr; OFF flick gives one full wipe, because the auto-stop finishes it.</td></tr>
+            <tr><td>3</td><td>WASH held</td><td>Pump on (10 s safety limit). Blades start after 0.3 s.</td></tr>
+            <tr><td>4</td><td>After WASH</td><td>3 more wipes (2 with DIP 1 on), counted on the park switch.</td></tr>
+            <tr><td>5</td><td>INT</td><td>First wipe right away, then 2&ndash;20 s from the ring, timed from park.</td></tr>
+            <tr><td>Safety</td><td>Park fault</td><td>If the motor is driven 8 s with no auto-stop change, all outputs stop and the LED flashes fast. Stalk to OFF clears it.</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONNECTORS ============ -->
+  <section id="p-pins" role="tabpanel" hidden>
+    <div class="doc">
+      <p class="lead">Board connectors are Molex headers on the bottom edge. The harness runs from these to the factory stalk (E113) and factory motor (E1). Colours are from the 1991&ndash;94 FSM; confirm against Alex's connector photos before crimping.</p>
+      <div class="two">
+        <div class="card"><h2>J1 Power <span class="tag">Mini-Fit Jr 2&times;2</span></h2>
+          <div class="tbl"><table><thead><tr><th>Pin</th><th>Net</th><th>Connect to</th></tr></thead><tbody>
+            <tr><td>1, 2</td><td class="mono">+12V_IN</td><td>Fused key-on +12V (any source)</td></tr>
+            <tr><td>3, 4</td><td class="mono">GND</td><td>Chassis ground</td></tr>
+          </tbody></table></div></div>
+        <div class="card"><h2>J2 Wiper motor <span class="tag">Mini-Fit Jr 2&times;3</span></h2>
+          <div class="tbl"><table><thead><tr><th>Pin</th><th>Net</th><th>Motor wire (E1)</th></tr></thead><tbody>
+            <tr><td>1</td><td class="mono">+12V_MOT</td><td>LG &mdash; common brush / auto-stop supply</td></tr>
+            <tr><td>2</td><td class="mono">PARK</td><td>OR &mdash; auto-stop output</td></tr>
+            <tr><td>3</td><td class="mono">GND</td><td>B &mdash; ground</td></tr>
+            <tr><td>4</td><td class="mono">MOTOR_LO</td><td>LG/B &mdash; LO brush</td></tr>
+            <tr><td>5</td><td class="mono">MOTOR_HI</td><td>LG/R &mdash; HI brush</td></tr>
+            <tr><td>6</td><td class="mono">GND</td><td>spare</td></tr>
+          </tbody></table></div></div>
+        <div class="card"><h2>J3 Washer pump <span class="tag">Mini-Fit Jr 2&times;1</span></h2>
+          <div class="tbl"><table><thead><tr><th>Pin</th><th>Net</th><th>Pump wire</th></tr></thead><tbody>
+            <tr><td>1</td><td class="mono">PUMP_OUT</td><td>Red (+)</td></tr>
+            <tr><td>2</td><td class="mono">GND</td><td>Black (&minus;)</td></tr>
+          </tbody></table></div></div>
+        <div class="card"><h2>J4 Wiper stalk <span class="tag">Micro-Fit 3.0 2&times;6</span></h2>
+          <div class="tbl"><table><thead><tr><th>Pin</th><th>Net</th><th>Stalk pin (E113)</th></tr></thead><tbody>
+            <tr><td>1</td><td class="mono">STK1</td><td>13 BR (park return, OFF/INT)</td></tr>
+            <tr><td>2</td><td class="mono">STK2</td><td>14 LG/B (LO)</td></tr>
+            <tr><td>3</td><td class="mono">STK3</td><td>15 L/Y (INT)</td></tr>
+            <tr><td>4</td><td class="mono">STK4</td><td>16 LG/R (HI)</td></tr>
+            <tr><td>5</td><td class="mono">STK5</td><td>18 P (WASH)</td></tr>
+            <tr><td>6</td><td class="mono">STK6</td><td>19 PU (INT ring)</td></tr>
+            <tr><td>7, 8</td><td class="mono">STK7, STK8</td><td>spare inputs</td></tr>
+            <tr><td>9</td><td class="mono">GND</td><td>17 B (common)</td></tr>
+            <tr><td>10</td><td class="mono">GND</td><td>20 B (ring return)</td></tr>
+            <tr><td>11</td><td class="mono">STK_12V</td><td>spare +12V (0.2A PTC)</td></tr>
+            <tr><td>12</td><td class="mono">GND</td><td>spare</td></tr>
+          </tbody></table></div>
+          <h3>Factory stalk plug cavities (EL-17, terminal side)</h3>
+          <div class="tbl"><table class="mono" style="width:auto"><tbody>
+            <tr><td>17 B</td><td>19 PU</td><td>13 BR</td><td>16 LG/R</td></tr>
+            <tr><td>18 P</td><td>20 B</td><td>14 LG/B</td><td>15 L/Y</td></tr>
+          </tbody></table></div></div>
+        <div class="card"><h2>J5 Program / debug <span class="tag">1&times;4 header</span></h2>
+          <div class="tbl"><table><thead><tr><th>Pin</th><th>Net</th><th>Use</th></tr></thead><tbody>
+            <tr><td>1</td><td class="mono">+5V</td><td>Leave open when the board has 12V</td></tr>
+            <tr><td>2</td><td class="mono">UPDI</td><td>Programmer UPDI</td></tr>
+            <tr><td>3</td><td class="mono">GND</td><td>Programmer / serial ground</td></tr>
+            <tr><td>4</td><td class="mono">DBG_TX</td><td>To USB-serial RX, 115200</td></tr>
+          </tbody></table></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PARTS ============ -->
+  <section id="p-bom" role="tabpanel" hidden>
+    <div class="doc">
+      <p class="lead">59 parts on the board plus 9 not fitted (option pads). The full list with harness parts is in <code>hardware/s13_wiper/BOM.csv</code>. Datasheet links come from the KiCad libraries; other parts are standard and searchable by part number.</p>
+      <div class="tbl card" style="padding:0">
+        <table>
+          <thead><tr><th>Refs</th><th>Qty</th><th>Part</th><th>Manufacturer part</th><th>Why it's there</th></tr></thead>
+          <tbody id="bom-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROGRAMMING ============ -->
+  <section id="p-prog" role="tabpanel" hidden>
+    <div class="doc">
+      <div class="two">
+        <div class="card">
+          <h2>What you need</h2>
+          <ul>
+            <li>A UPDI programmer. The simplest is a ready-made "UPDI Friend" style USB programmer. Or build one from any USB-serial adapter (CH340, CP2102, FTDI): connect adapter <b>RX</b> straight to UPDI and adapter <b>TX</b> to UPDI through a <b>470&Omega;&ndash;1k&Omega;</b> resistor. This is the "SerialUPDI" method.</li>
+            <li>12V bench supply or battery on J1 (a 1A current limit is plenty for programming).</li>
+            <li>Arduino IDE 2 with the <b>megaTinyCore</b> board package.</li>
+          </ul>
+          <h3>Firmware build (checked)</h3>
+          <p class="mono" style="font-size:13px">5,354 bytes flash (32%) &middot; 251 bytes RAM (12%) &middot; 0 warnings</p>
+        </div>
+        <div class="card">
+          <h2>Flash it</h2>
+          <ol class="steps">
+            <li>Arduino IDE &rarr; <b>File &rarr; Preferences</b> &rarr; Additional boards manager URLs: <code>http://drazzy.com/package_drazzy.com_index.json</code></li>
+            <li><b>Tools &rarr; Board &rarr; Boards Manager</b>, search <b>megaTinyCore</b>, install.</li>
+            <li>Open <code>firmware/s13_wiper/s13_wiper.ino</code>.</li>
+            <li>Tools: Board <b>ATtiny3226/3216/1626/1616&hellip;</b> (no Optiboot), Chip <b>ATtiny1616</b>, Clock <b>8 MHz internal</b>, Programmer <b>SerialUPDI - 230400 baud</b>, Port = your adapter.</li>
+            <li>Power the board with 12V on J1. Connect programmer UPDI to J5 pin 2 and GND to J5 pin 3. Leave J5 pin 1 (+5V) unconnected.</li>
+            <li><b>Sketch &rarr; Upload Using Programmer</b> (Ctrl+Shift+U). <span class="expect">Expect "avrdude done" and the board LED stays off with the stalk in OFF.</span></li>
+          </ol>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Diagnostics mode</h2>
+        <p>Set DIP 2 on and connect a USB-serial adapter's RX to J5 pin 4, GND to pin 3. Open the Serial Monitor at 115200. Every quarter second the board prints each stalk channel's ADC reading, the park switch state and what it decoded. Walk the stalk through every position; this is the stalk truth table without a multimeter. The Virtual bench tab prints the same lines.</p>
+        <pre class="serial" style="min-height:0">S1=1023 S2=1023 S3=0 S4=1023 S5=1023 S6=96 S7=1023 S8=1023 | park=PARKED | INT(6.0s)</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BENCH TEST ============ -->
+  <section id="p-bench" role="tabpanel" hidden>
+    <div class="doc">
+      <p class="lead">Before the board goes near the car, prove it on the bench with three 12V bulbs and a toggle switch standing in for the motor. Nothing on the board can tell the difference.</p>
+      <div class="two">
+        <div class="card">
+          <h2>Build the test rig</h2>
+          <div class="tbl"><table>
+            <thead><tr><th>Stand-in</th><th>Wire it</th></tr></thead>
+            <tbody>
+              <tr><td>Power</td><td>12V supply (3A+) or a battery through a 5A fuse &rarr; J1 pins 1&ndash;2; ground &rarr; J1 pins 3&ndash;4</td></tr>
+              <tr><td>Bulb A = LO brush</td><td>+12V &rarr; bulb &rarr; J2 pin 4. Lit = motor running on LO.</td></tr>
+              <tr><td>Bulb B = HI brush</td><td>+12V &rarr; bulb &rarr; J2 pin 5. Lit = motor running on HI.</td></tr>
+              <tr><td>Bulb C = pump</td><td>J3 pin 1 &rarr; bulb &rarr; GND. Lit = washer on.</td></tr>
+              <tr><td>Toggle = auto-stop</td><td>SPDT switch: common &rarr; J2 pin 2. One side to +12V ("parked"), other side to GND ("sweeping").</td></tr>
+              <tr><td>Stalk</td><td>The real stalk through the harness, or jumper J4 pins 2&ndash;5 to J4 pin 9 (GND).</td></tr>
+            </tbody>
+          </table></div>
+          <p>Start with the toggle on "parked". 5&ndash;10W bulbs keep the current low.</p>
+        </div>
+        <div class="card">
+          <h2>Run the checks</h2>
+          <ol class="steps">
+            <li>Key on, stalk OFF. <span class="expect">No clicks, all bulbs off.</span></li>
+            <li>LO. <span class="expect">K1 clicks, bulb A on.</span> Flip the toggle back and forth: nothing changes.</li>
+            <li>HI. <span class="expect">Two clicks, bulb B on, A off.</span></li>
+            <li>OFF with the toggle on "sweeping". <span class="expect">Bulb A stays on</span> until you flip to "parked". That's the blade finishing its sweep.</li>
+            <li>INT. <span class="expect">Bulb A on at once.</span> Flip to "sweeping": K1 releases but A stays on. Flip to "parked": A off. Time the next flash at both ring ends: <span class="expect">about 2 s and 20 s.</span></li>
+            <li>Hold WASH. <span class="expect">Bulb C on, A on after 0.3 s.</span> Release, then toggle sweeping&rarr;parked three times: <span class="expect">A stops after the third.</span> DIP 1 on: two.</li>
+            <li>Hold WASH for 12 s. <span class="expect">Bulb C goes off at 10 s.</span></li>
+            <li>LO with the toggle left on "parked". <span class="expect">After 8 s all off, LED flashing fast.</span> Stalk OFF clears it.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  // ---------------- tabs ----------------
+  const tabs = [...document.querySelectorAll('nav [role=tab]')];
+  let mermaidDone = false;
+  function show(tab) {
+    tabs.forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', on);
+      document.getElementById(t.dataset.panel).hidden = !on;
+    });
+    if (tab.dataset.panel === 'p-circuit' && !mermaidDone && window.mermaid) {
+      mermaidDone = true;
+      try { window.mermaid.run({ querySelector: '#p-circuit pre.mermaid' }); } catch (e) {}
+    }
+    try { localStorage.setItem('monsoon-tab', tab.id); } catch (e) {}
+  }
+  tabs.forEach(t => t.addEventListener('click', () => show(t)));
+  try { const saved = localStorage.getItem('monsoon-tab'); if (saved && document.getElementById(saved)) show(document.getElementById(saved)); } catch (e) {}
+
+  // ---------------- BOM ----------------
+  const BOM = [
+    ['U1', 1, '5V automotive regulator', 'TI LM2936MP-5.0/NOPB', 'Survives load dump; 40V operating', 'http://www.ti.com/lit/ds/symlink/lm2936.pdf'],
+    ['U2', 1, 'Microcontroller', 'Microchip ATTINY1616-SNR', 'Runs the firmware', 'http://ww1.microchip.com/downloads/en/DeviceDoc/ATtiny3216_ATtiny1616-data-sheet-40001997B.pdf'],
+    ['U3', 1, 'Relay driver', 'TI ULN2003ADR', 'Drives relay coils, built-in flyback diodes', 'http://www.ti.com/lit/ds/symlink/uln2003a.pdf'],
+    ['K1&ndash;K3', 3, 'Relay SPDT 16A 12V', 'Omron G2RL-1-E DC12', 'Run/park, LO/HI, washer', 'https://omronfs.omron.com/en_US/ecb/products/pdf/en-g2rl.pdf'],
+    ['F1', 1, 'Mini blade fuse holder + 20A fuse', 'Keystone 3568 + 20A mini', 'Motor/pump feed, matches factory fuse'],
+    ['F2', 1, 'PTC 0.2A', 'Bourns MF-USMF020', 'Spare +12V on stalk plug'],
+    ['D2', 1, 'TVS 26V bidirectional', 'Littelfuse SMBJ26CA', 'Clamps alternator spikes'],
+    ['D1, D3', 2, 'Diode 1A', 'S1M', 'Reverse polarity; pump flyback'],
+    ['D4', 1, 'LED green 0805', 'any', 'Status'],
+    ['C1', 1, '47&micro;F 50V electrolytic', 'Panasonic EEE-FK1H470P', '12V bulk'],
+    ['C3', 1, '22&micro;F 16V tantalum', 'Kemet T491B226K016AT', 'Regulator output (needs this ESR)'],
+    ['C2, C4, C5, C10&ndash;C90', 12, '100nF 50V X7R 0805', 'Samsung CL21B104KBCNNNC', 'Decoupling and input filters'],
+    ['R10&ndash;R80', 8, '2.2k 0805', 'Yageo RC0805FR-072K2L', 'Stalk pull-ups / ring sense'],
+    ['R11&ndash;R91', 9, '33k 0805', 'Yageo RC0805FR-0733KL', 'Input protection'],
+    ['R92', 1, '22k 0805', 'Yageo RC0805FR-0722KL', 'Park 12V divider'],
+    ['R1', 1, '1k 0805', 'Yageo RC0805FR-071KL', 'LED'],
+    ['SW1', 1, 'DIP switch 2-pos SMD', 'CTS 219-2MST or equiv.', 'Wipe count, diagnostics'],
+    ['J1', 1, 'Mini-Fit Jr 2&times;2 R/A', 'Molex 0039301040', 'Power in'],
+    ['J2', 1, 'Mini-Fit Jr 2&times;3 R/A', 'Molex 0039301060', 'Wiper motor'],
+    ['J3', 1, 'Mini-Fit Jr 2&times;1 R/A', 'Molex 0039301020', 'Washer pump'],
+    ['J4', 1, 'Micro-Fit 3.0 2&times;6 R/A', 'Molex 0430451200', 'Wiper stalk'],
+    ['J5', 1, '1&times;4 pin header 2.54mm', 'any', 'Program / debug'],
+    ['R12&ndash;R82, R90', 9, 'option pads', 'not fitted', 'Only if an input needs the other mode', null, true],
+  ];
+  document.getElementById('bom-body').innerHTML = BOM.map(([refs, qty, part, mpn, why, ds, dnp]) =>
+    `<tr${dnp ? ' class="dnp"' : ''}><td class="mono">${refs}</td><td class="mono">${qty}</td><td>${part}</td><td class="mono">${ds ? `<a href="${ds}" target="_blank" rel="noopener">${mpn}</a>` : mpn}</td><td>${why}</td></tr>`).join('');
+
+  // ---------------- firmware port (s13_wiper.ino) ----------------
+  const K = { CONTACT_CLOSED_ADC: 150, RING_ADC_SHORT: 6, RING_ADC_LONG: 308, INT_DELAY_MIN_MS: 2000, INT_DELAY_MAX_MS: 20000,
+    WASH_WIPE_START_MS: 300, WASH_MAX_MS: 10000, KICK_TIMEOUT_MS: 1500, PARK_FAULT_MS: 8000, SPEED_CHANGE_GAP_MS: 60,
+    DEBOUNCE_MS: 30, PARK_DEBOUNCE_MS: 5 };
+  const CH_LO = 2, CH_INT = 3, CH_HI = 4, CH_WASH = 5, CH_RING = 6;
+  class Debounced {
+    constructor(ms) { this.ms = ms; this.state = false; this.raw = false; this.changedAt = 0; }
+    update(r, now) { if (r !== this.raw) { this.raw = r; this.changedAt = now; } else if (r !== this.state && now - this.changedAt >= this.ms) this.state = r; }
+  }
+  function newFirmware() {
+    return { swLo: new Debounced(K.DEBOUNCE_MS), swInt: new Debounced(K.DEBOUNCE_MS), swHi: new Debounced(K.DEBOUNCE_MS),
+      swWash: new Debounced(K.DEBOUNCE_MS), sweeping: new Debounced(K.PARK_DEBOUNCE_MS), adc: new Array(9).fill(0),
+      intPhase: 'Waiting', intPhaseAt: 0, washing: false, washStartedAt: 0, afterWashWipes: 0, lastSweeping: false,
+      runOut: false, hiOut: false, pumpOut: false, speedChangeAt: 0, fault: false, parkChangedAt: 0,
+      kRun: false, kHi: false, kWash: false, led: false, lastPrint: 0 };
+  }
+  function intDelayMs(f) {
+    const a = f.adc[CH_RING], lo = K.RING_ADC_SHORT, hi = K.RING_ADC_LONG, span = hi - lo;
+    const pos = span >= 0 ? Math.min(Math.max(a, lo), hi) - lo : lo - Math.min(Math.max(a, hi), lo);
+    const abs = Math.abs(span);
+    if (abs === 0) return K.INT_DELAY_MIN_MS;
+    return K.INT_DELAY_MIN_MS + Math.floor((K.INT_DELAY_MAX_MS - K.INT_DELAY_MIN_MS) * pos / abs);
+  }
+  function setRelays(f, run, hi, now) {
+    if (hi !== f.hiOut) { f.kRun = false; f.hiOut = hi; f.kHi = hi; f.speedChangeAt = now; }
+    f.runOut = run && now - f.speedChangeAt >= K.SPEED_CHANGE_GAP_MS;
+    f.kRun = f.runOut;
+  }
+  function fwLoop(f, now, io, print) {
+    for (let i = 1; i <= 8; i++) f.adc[i] = io.adc[i];
+    f.swLo.update(f.adc[CH_LO] < K.CONTACT_CLOSED_ADC, now);
+    f.swInt.update(f.adc[CH_INT] < K.CONTACT_CLOSED_ADC, now);
+    f.swHi.update(f.adc[CH_HI] < K.CONTACT_CLOSED_ADC, now);
+    f.swWash.update(f.adc[CH_WASH] < K.CONTACT_CLOSED_ADC, now);
+    f.sweeping.update(!io.parkHigh, now);
+
+    const sw = f.sweeping.state;
+    const justParked = f.lastSweeping && !sw;
+    if (sw !== f.lastSweeping) f.parkChangedAt = now;
+    f.lastSweeping = sw;
+    const wipesAfterWash = io.dip1 ? 2 : 3;
+
+    if (f.swWash.state && !f.washing) { f.washing = true; f.washStartedAt = now; f.afterWashWipes = 0; }
+    if (!f.swWash.state && f.washing) { f.washing = false; f.afterWashWipes = wipesAfterWash; }
+    f.pumpOut = f.washing && now - f.washStartedAt < K.WASH_MAX_MS;
+    f.kWash = f.pumpOut;
+    if (justParked && f.afterWashWipes > 0 && !f.washing) f.afterWashWipes--;
+
+    let run = false, hi = false;
+    if (f.swHi.state) { run = true; hi = true; }
+    else if (f.swLo.state) { run = true; }
+    else if (f.washing) { run = now - f.washStartedAt >= K.WASH_WIPE_START_MS; }
+    else if (f.afterWashWipes > 0) { run = f.afterWashWipes > 1 || !sw; }
+    else if (f.swInt.state) {
+      if (f.intPhase === 'Waiting') { if (now - f.intPhaseAt >= intDelayMs(f)) { f.intPhase = 'Kicking'; f.intPhaseAt = now; } }
+      else if (f.intPhase === 'Kicking') { run = true; if (sw || now - f.intPhaseAt >= K.KICK_TIMEOUT_MS) { f.intPhase = 'Returning'; f.intPhaseAt = now; } }
+      else if (f.intPhase === 'Returning') { if (!sw || now - f.intPhaseAt >= K.PARK_FAULT_MS) { f.intPhase = 'Waiting'; f.intPhaseAt = now; } }
+    }
+    if (!f.swInt.state) { f.intPhase = 'Waiting'; f.intPhaseAt = now - K.INT_DELAY_MAX_MS; }
+
+    if (!f.runOut) f.parkChangedAt = now;
+    if (f.runOut && now - f.parkChangedAt >= K.PARK_FAULT_MS) f.fault = true;
+    const anyRequest = f.swHi.state || f.swLo.state || f.swInt.state || f.swWash.state;
+    if (f.fault && !anyRequest) { f.fault = false; f.afterWashWipes = 0; }
+    if (f.fault) run = false;
+
+    setRelays(f, run, hi && !f.fault, now);
+    const blink = Math.floor(now / (f.fault ? 100 : 500)) % 2 === 1;
+    f.led = f.fault ? blink : (f.runOut || f.pumpOut || (f.swInt.state && blink));
+
+    if (io.dip2 && now - f.lastPrint >= 250) {
+      f.lastPrint = now;
+      let s = '';
+      for (let i = 1; i <= 8; i++) s += `S${i}=${f.adc[i]} `;
+      s += `| park=${f.sweeping.state ? 'SWEEP' : 'PARKED'} | `;
+      if (f.swHi.state) s += 'HI ';
+      if (f.swLo.state) s += 'LO ';
+      if (f.swInt.state) s += `INT(${(intDelayMs(f) / 1000).toFixed(1)}s) `;
+      if (f.swWash.state) s += 'WASH ';
+      if (f.fault) s += 'FAULT ';
+      print(s);
+    }
+  }
+
+  // ---------------- car model ----------------
+  const LO_CYCLE_S = 1.55, HI_CYCLE_S = 1.02, PARK_ZONE = 0.035;
+  const ui = {
+    key: document.getElementById('key'), ring: document.getElementById('ring'), dip1: document.getElementById('dip1'),
+    dip2: document.getElementById('dip2'), fast: document.getElementById('fast'), parkcut: document.getElementById('parkcut'),
+    rain: document.getElementById('rain'), wash: document.getElementById('wash'), engine: document.getElementById('engine'),
+  };
+
+  // ---------------- the stalk (EL-17: OFF at top, INT / LO / HI going down, pull = WASH, twist ring) ----------------
+  const POSITIONS = ['OFF', 'INT', 'LO', 'HI'];
+  const ANGLES = [0, 10, 20, 30];
+  const PIVOT = { x: 50, y: 62 };
+  const held = { wash: false, washSources: new Set() };
+  let lever = 0;                              // index into POSITIONS
+  const svg = document.getElementById('stalk');
+  const leverG = document.getElementById('lever'), bodyG = document.getElementById('lever-body');
+  const ribs = document.getElementById('ribs'), ringMark = document.getElementById('ring-mark');
+  const detentsG = document.getElementById('detents');
+  svg.setAttribute('tabindex', '0');
+
+  POSITIONS.forEach((p, i) => {
+    const a = ANGLES[i] * Math.PI / 180, R = 272;
+    const x = PIVOT.x + R * Math.cos(a) + 8, y = PIVOT.y + R * Math.sin(a) + 4;
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', x); t.setAttribute('y', y); t.textContent = p; t.dataset.i = i;
+    detentsG.appendChild(t);
+  });
+
+  function setWash(src, on) {
+    on ? held.washSources.add(src) : held.washSources.delete(src);
+    held.wash = held.washSources.size > 0;
+    ui.wash.classList.toggle('active', held.wash);
+  }
+  function drawStalk() {
+    const ang = ANGLES[lever];
+    leverG.setAttribute('transform', `rotate(${ang} ${PIVOT.x} ${PIVOT.y})`);
+    // pulled toward the driver: the lever swings a little toward the viewer
+    bodyG.setAttribute('transform', held.wash ? 'translate(-5 66) scale(1 1.12)' : 'translate(0 62)');
+    [...detentsG.children].forEach(t => { t.style.fill = +t.dataset.i === lever ? 'var(--accent)' : 'var(--ink-soft)'; t.style.fontWeight = +t.dataset.i === lever ? '700' : '500'; });
+    // ring: ribs roll past as it twists; the amber index moves from top (14 ohm) to bottom (950 ohm)
+    const frac = (+ui.ring.value - 14) / (950 - 14);
+    const off = (frac * 60) % 4;
+    let s = '';
+    for (let y = -12 + off; y < 12; y += 4) s += `<line x1="212" x2="246" y1="${y.toFixed(2)}" y2="${y.toFixed(2)}"/>`;
+    ribs.innerHTML = s;
+    ringMark.setAttribute('cy', (-6 + 12 * frac).toFixed(2));
+  }
+  function setLever(i) { lever = Math.max(0, Math.min(3, i)); drawStalk(); }
+  function twist(dOhm) { ui.ring.value = Math.max(14, Math.min(950, +ui.ring.value + dOhm)); drawStalk(); }
+
+  function svgPoint(e) { const r = svg.getBoundingClientRect(); return { x: (e.clientX - r.left) * 380 / r.width, y: (e.clientY - r.top) * 210 / r.height }; }
+  let drag = null;
+  svg.addEventListener('pointerdown', e => {
+    const target = e.target.closest('#ring-grp') ? 'ring' : e.target.closest('#tip') ? 'tip' : 'lever';
+    drag = { mode: target, y0: svgPoint(e).y, v0: +ui.ring.value };
+    svg.setPointerCapture(e.pointerId);
+    if (target === 'tip') setWash('tip', true);
+    e.preventDefault();
+    svg.focus();
+  });
+  svg.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const p = svgPoint(e);
+    if (drag.mode === 'ring') { ui.ring.value = Math.max(14, Math.min(950, drag.v0 + (p.y - drag.y0) * 9)); drawStalk(); }
+    else if (drag.mode === 'lever') {
+      const ang = Math.atan2(p.y - PIVOT.y, p.x - PIVOT.x) * 180 / Math.PI;
+      let best = 0; ANGLES.forEach((a, i) => { if (Math.abs(a - ang) < Math.abs(ANGLES[best] - ang)) best = i; });
+      if (best !== lever) setLever(best);
+    }
+  });
+  const endDrag = () => { if (drag && drag.mode === 'tip') setWash('tip', false); drag = null; drawStalk(); };
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', endDrag);
+  svg.addEventListener('wheel', e => { if (e.target.closest('#ring-grp')) { e.preventDefault(); twist(e.deltaY > 0 ? 25 : -25); } }, { passive: false });
+  svg.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setLever(lever + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setLever(lever - 1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); twist(25); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); twist(-25); }
+    else if (e.key === ' ' || e.key === 'w' || e.key === 'W') { e.preventDefault(); setWash('key', true); drawStalk(); }
+  });
+  svg.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'w' || e.key === 'W') { setWash('key', false); drawStalk(); } });
+  ui.ring.addEventListener('input', drawStalk);
+  const wb = ui.wash;
+  wb.addEventListener('pointerdown', e => { e.preventDefault(); wb.setPointerCapture?.(e.pointerId); setWash('btn', true); drawStalk(); });
+  wb.addEventListener('pointerup', () => { setWash('btn', false); drawStalk(); });
+  wb.addEventListener('pointercancel', () => { setWash('btn', false); drawStalk(); });
+  wb.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setWash('bkey', true); drawStalk(); } });
+  wb.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') { setWash('bkey', false); drawStalk(); } });
+  drawStalk();
+  document.getElementById('crank').addEventListener('click', () => { car.crankUntil = car.t + 1200; });
+  document.getElementById('spike').addEventListener('click', () => { car.spikeAt = car.t; car.spikeUntil = car.t + 500; });
+
+  const car = { t: 0, phase: 0, speed: 0, powered: true, bootAt: 0, fw: newFirmware() };
+  const serialLines = [];
+  const serialEl = document.getElementById('serial');
+  function print(line) { serialLines.push(line); if (serialLines.length > 40) serialLines.shift(); serialDirty = true; }
+  let serialDirty = false;
+
+  function stalkPos() { return POSITIONS[lever]; }
+  function inParkZone() { return car.phase < PARK_ZONE || car.phase > 1 - PARK_ZONE; }
+
+  function readInputs() {
+    const pos = stalkPos();
+    const lo = pos === 'LO';
+    const contacts = { 2: lo, 3: pos === 'INT', 4: pos === 'HI', 5: held.wash };
+    const adc = new Array(9).fill(1023);
+    for (const ch of [2, 3, 4, 5]) if (contacts[ch]) adc[ch] = 0;
+    const r = +ui.ring.value;
+    adc[6] = Math.round(1023 * r / (2200 + r));
+    // Auto-stop: +12V at park, GND while sweeping. Disconnected -> 22k pull-down reads low.
+    const parkNet = ui.parkcut.checked ? 'open' : (inParkZone() ? (ui.key.checked ? '12V' : 'open') : 'GND');
+    return { adc, parkNet, parkHigh: parkNet === '12V', dip1: ui.dip1.checked, dip2: ui.dip2.checked };
+  }
+
+  // 12V system: G2RL coil must-operate 70% (8.4 V), must-release 10% (1.2 V); LM2936 needs ~5.6 V in for 5 V out.
+  const RELAY_PULL_IN = 8.4, RELAY_DROP = 1.2, LDO_MIN_IN = 5.6, TVS_CLAMP = 42;
+  function supplyVolts() {
+    if (!ui.key.checked) return { v: 0, raw: 0 };
+    let v = ui.engine.checked ? 14.2 : 12.4;
+    if (car.t < car.crankUntil) v = 6.5;
+    if (car.t < car.spikeUntil) {
+      const raw = 80 * Math.exp(-(car.t - car.spikeAt) / 120);
+      return { v: Math.max(v, Math.min(raw, TVS_CLAMP)), raw: Math.max(v, raw) };
+    }
+    return { v, raw: v };
+  }
+  car.crankUntil = 0; car.spikeUntil = 0; car.spikeAt = 0; car.rel = [false, false, false]; car.v = 12.4; car.vRaw = 12.4;
+  function step(dtMs) {
+    car.t += dtMs;
+    const io = readInputs();
+    const sup = supplyVolts(); car.v = sup.v; car.vRaw = sup.raw;
+    const logicOk = car.v - 0.8 >= LDO_MIN_IN;          // after the D1 reverse-polarity diode
+    if (logicOk && !car.powered) { car.powered = true; car.bootAt = car.t; car.fw = newFirmware(); }
+    if (!logicOk) car.powered = false;
+    const f = car.fw;
+    if (car.powered) fwLoop(f, Math.floor(car.t - car.bootAt), io, print);
+    const cmd = [car.powered && f.kRun, car.powered && f.kHi, car.powered && f.kWash];
+    const coilV = car.v - 0.8 - 0.9;                     // D1 drop, ULN2003 saturation
+    car.rel = car.rel.map((on, i) => cmd[i] && (on ? coilV >= RELAY_DROP : coilV >= RELAY_PULL_IN));
+    const [k1, k2, k3] = car.rel;
+
+    // Brush drive: K1 energized -> GND; released -> follows the auto-stop contact.
+    let brush = 'open';
+    if (car.v > 0) brush = k1 ? 'GND' : (io.parkNet === 'open' ? 'open' : io.parkNet);
+    let target = 0;
+    if (brush === 'GND') target = (1 / (k2 ? HI_CYCLE_S : LO_CYCLE_S)) * Math.min(car.v, 16) / 13.5;   // motor speed follows voltage
+    car.speed = target;                            // a wiper gearmotor spins up in a few ms; brake is immediate
+    car.phase = (car.phase + car.speed * dtMs / 1000) % 1;
+    car.brush = brush; car.k = [k1, k2, k3]; car.io = io;
+  }
+
+  // ---------------- rendering ----------------
+  const cv = document.getElementById('glass'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const PIVOTS = [{ x: W * 0.205, len: W * 0.43 }, { x: W * 0.585, len: W * 0.40 }];
+  const PIVOT_Y = H * 0.93, MAX_ANGLE = 1.97;
+  let drops = [], spray = [];
+  let lastAngle = 0;
+
+  function bladeAngle() { return MAX_ANGLE * (1 - Math.cos(2 * Math.PI * car.phase)) / 2; }
+
+  function glassPath() {
+    ctx.beginPath();
+    ctx.moveTo(W * 0.05, H * 0.9);
+    ctx.quadraticCurveTo(W * 0.5, H * 0.96, W * 0.95, H * 0.9);
+    ctx.lineTo(W * 0.83, H * 0.1);
+    ctx.quadraticCurveTo(W * 0.5, H * 0.05, W * 0.17, H * 0.1);
+    ctx.closePath();
+  }
+
+  function clearSwept(a0, a1) {
+    if (Math.abs(a1 - a0) < 1e-4) return;
+    const lo = Math.min(a0, a1) - 0.02, hi = Math.max(a0, a1) + 0.02;
+    drops = drops.filter(d => {
+      for (const p of PIVOTS) {
+        const dx = d.x - p.x, dy = PIVOT_Y - d.y, r = Math.hypot(dx, dy);
+        const ang = Math.PI - Math.atan2(dy, -dx);   // 0 = pointing right, grows counter-clockwise
+        const a = Math.PI - ang;
+        const angle = Math.atan2(dy, dx);
+        if (r > p.len * 0.12 && r < p.len && angle >= lo && angle <= hi) return false;
+      }
+      return true;
+    });
+  }
+
+  function draw(dtMs) {
+    const rain = +ui.rain.value / 100;
+    ctx.clearRect(0, 0, W, H);
+    // sky / street through the glass
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#223246'); g.addColorStop(0.55, '#2c3e52'); g.addColorStop(1, '#141c26');
+    ctx.fillStyle = '#0b1118'; ctx.fillRect(0, 0, W, H);
+    ctx.save(); glassPath(); ctx.clip();
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    // road and tail lights, blurred when wet
+    const wet = Math.min(1, drops.length / 900);
+    ctx.fillStyle = '#1a232d';
+    ctx.beginPath(); ctx.moveTo(W * 0.1, H); ctx.lineTo(W * 0.47, H * 0.52); ctx.lineTo(W * 0.53, H * 0.52); ctx.lineTo(W * 0.9, H); ctx.fill();
+    ctx.strokeStyle = 'rgba(235,225,180,.55)'; ctx.lineWidth = 4; ctx.setLineDash([26, 30]);
+    ctx.beginPath(); ctx.moveTo(W * 0.5, H); ctx.lineTo(W * 0.5, H * 0.53); ctx.stroke(); ctx.setLineDash([]);
+    for (const [x, y, s] of [[0.44, 0.5, 1], [0.575, 0.47, 0.7]]) {
+      ctx.fillStyle = `rgba(255,70,60,${0.55 + 0.3 * wet})`;
+      ctx.shadowColor = 'rgba(255,60,50,.9)'; ctx.shadowBlur = 18 + 40 * wet;
+      ctx.fillRect(W * x, H * y, 26 * s, 9 * s); ctx.fillRect(W * x + 70 * s, H * y, 26 * s, 9 * s);
+    }
+    ctx.shadowBlur = 0;
+
+    // rain drops on the glass
+    if (car.powered !== undefined) {
+      const spawn = rain * rain * 3.2 * dtMs / 16;
+      for (let i = 0; i < spawn; i++) drops.push({ x: W * (0.1 + Math.random() * 0.8), y: H * (0.08 + Math.random() * 0.84), r: 1.5 + Math.random() * 4.5 * rain + 1, wash: false });
+      if (drops.length > 2600) drops.splice(0, drops.length - 2600);
+    }
+    // washer fluid
+    if (car.k && car.k[2]) {
+      for (let i = 0; i < 6 * dtMs / 16; i++) {
+        for (const nx of [0.42, 0.58]) spray.push({ x: W * nx, y: H * 0.9, vx: (Math.random() - 0.5) * 3.2, vy: -(10 + Math.random() * 6), life: 26 + Math.random() * 18 });
+      }
+    }
+    spray = spray.filter(p => {
+      p.x += p.vx * dtMs / 16; p.y += p.vy * dtMs / 16; p.vy += 0.35 * dtMs / 16; p.life -= dtMs / 16;
+      if (p.life <= 0) { drops.push({ x: p.x, y: p.y, r: 3 + Math.random() * 5, wash: true }); return false; }
+      return true;
+    });
+
+    const a = bladeAngle();
+    clearSwept(lastAngle, a);
+    lastAngle = a;
+
+    for (const d of drops) {
+      ctx.fillStyle = d.wash ? 'rgba(120,200,255,.35)' : 'rgba(210,225,240,.28)';
+      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.35)';
+      ctx.beginPath(); ctx.arc(d.x - d.r * 0.3, d.y - d.r * 0.3, d.r * 0.3, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(140,210,255,.8)';
+    for (const p of spray) { ctx.beginPath(); ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+
+    // glass edge, A-pillars and cowl
+    ctx.strokeStyle = '#05080c'; ctx.lineWidth = 26; glassPath(); ctx.stroke();
+    ctx.fillStyle = '#0a0f15'; ctx.fillRect(0, H * 0.93, W, H * 0.07);
+
+    // blades
+    for (const p of PIVOTS) {
+      const ex = p.x + Math.cos(a) * p.len, ey = PIVOT_Y - Math.sin(a) * p.len;
+      ctx.strokeStyle = '#11161c'; ctx.lineWidth = 11; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(p.x, PIVOT_Y); ctx.lineTo(ex, ey); ctx.stroke();
+      ctx.strokeStyle = '#2d3742'; ctx.lineWidth = 4;
+      const sx = p.x + Math.cos(a) * p.len * 0.14, sy = PIVOT_Y - Math.sin(a) * p.len * 0.14;
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
+      ctx.fillStyle = '#1c242d'; ctx.beginPath(); ctx.arc(p.x, PIVOT_Y, 13, 0, Math.PI * 2); ctx.fill();
+    }
+    // HUD text
+    ctx.font = '600 22px "IBM Plex Mono", monospace';
+    ctx.fillStyle = 'rgba(230,238,245,.8)';
+    const rpm = car.speed ? Math.round(car.speed * 60) : 0;
+    ctx.fillText(car.powered ? `${rpm} wipes/min` : 'KEY OFF', 36, 46);
+  }
+
+  // ---------------- status panel ----------------
+  const lampEls = id => { const el = document.getElementById(id); return { el, txt: el.querySelector('span') }; };
+  const L = { v: lampEls('l-v'), motor: lampEls('l-motor'), park: lampEls('l-park'), k1: lampEls('l-k1'), k2: lampEls('l-k2'), k3: lampEls('l-k3'), led: lampEls('l-led') };
+  function lamp(l, cls, text) { l.el.className = 'lamp' + (cls ? ' ' + cls : ''); if (l.txt.textContent !== text) l.txt.textContent = text; }
+  const fwEl = document.getElementById('fwstate'), ringRead = document.getElementById('ring-read'), pinsEl = document.getElementById('stalk-pins');
+
+  function updatePanel() {
+    const f = car.fw, io = car.io || readInputs();
+    const running = car.speed > 0;
+    lamp(L.motor, running ? 'on' : '', !car.powered ? 'No power' : running ? (car.k[1] ? 'Running HI' : 'Running LO') : (car.brush === '12V' ? 'Braked at park' : 'Stopped'));
+    const parkTxt = ui.parkcut.checked ? 'Wire cut' : (inParkZone() ? 'Parked (+12V)' : 'Sweeping (GND)');
+    lamp(L.park, ui.parkcut.checked ? 'bad' : (inParkZone() ? 'good' : 'on'), parkTxt);
+    lamp(L.k1, car.k[0] ? 'on' : '', car.k[0] ? 'Brush to GND' : 'To auto-stop');
+    lamp(L.k2, car.k[1] ? 'on' : '', car.k[1] ? 'HI brush' : 'LO brush');
+    lamp(L.k3, car.k[2] ? 'on' : '', car.k[2] ? 'Pump on' : 'Off');
+    const spiking = car.vRaw > car.v + 0.5;
+    lamp(L.v, car.v < RELAY_PULL_IN && car.v > 0 ? 'bad' : spiking ? 'bad' : car.v > 0 ? 'good' : '',
+      car.v === 0 ? 'Key off' : spiking ? `${car.vRaw.toFixed(0)} V → ${car.v.toFixed(0)} V (TVS)` : `${car.v.toFixed(1)} V`);
+    lamp(L.led, car.powered && f.led ? (f.fault ? 'bad' : 'on') : '', f.fault ? 'Fault (fast flash)' : (car.powered && f.led ? 'On' : 'Off'));
+
+    const r = +ui.ring.value;
+    const adc = Math.round(1023 * r / (2200 + r));
+    const tmp = { adc: [0, 0, 0, 0, 0, 0, adc] };
+    ringRead.textContent = `${r} Ω · ADC ${adc} · ${(intDelayMs(tmp) / 1000).toFixed(1)} s`;
+
+    const pos = stalkPos(), closed = [];
+    if (pos === 'OFF' || pos === 'INT') closed.push('13–14');
+    if (pos === 'INT') closed.push('15–17');
+    if (pos === 'LO') closed.push('14–17');
+    if (pos === 'HI') closed.push('16–17');
+    if (held.wash) closed.push('17–18');
+    pinsEl.textContent = closed.length ? 'closed: ' + closed.join(', ') : 'no contacts closed';
+
+    const now = Math.floor(car.t - car.bootAt);
+    let next = '—';
+    if (car.powered && f.swInt.state && f.intPhase === 'Waiting' && !f.swLo.state && !f.swHi.state && !f.washing && !f.afterWashWipes) {
+      next = Math.max(0, (intDelayMs(f) - (now - f.intPhaseAt)) / 1000).toFixed(1) + ' s';
+    }
+    const rows = [
+      ['power', car.powered ? `on, ${(now / 1000).toFixed(1)} s since boot` : (ui.key.checked ? 'brown-out (reset)' : 'off')],
+      ['decoded', [f.swHi.state && 'HI', f.swLo.state && 'LO', f.swInt.state && 'INT', f.swWash.state && 'WASH'].filter(Boolean).join(' ') || 'OFF'],
+      ['intPhase', f.intPhase],
+      ['next INT wipe', next],
+      ['wipes after wash', String(f.afterWashWipes)],
+      ['pump timer', f.washing ? `${Math.min(10, (now - f.washStartedAt) / 1000).toFixed(1)} / 10 s` : '—'],
+      ['fault', f.fault ? 'PARK FAULT' : 'none'],
+    ];
+    fwEl.innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+
+    if (serialDirty) {
+      serialDirty = false;
+      serialEl.textContent = serialLines.join('\n');
+      serialEl.scrollTop = serialEl.scrollHeight;
+    } else if (!ui.dip2.checked && serialLines.length === 0 && !serialEl.querySelector('.hint')) {
+      serialEl.innerHTML = '<span class="hint">Serial monitor (115200). Turn on DIP 2 "Diagnostics" to see what the board prints.</span>';
+    }
+  }
+
+  // ---------------- main loop ----------------
+  let last = performance.now(), panelTick = 0;
+  function frame(ts) {
+    let dt = Math.min(100, ts - last); last = ts;
+    const simDt = dt * (ui.fast.checked ? 2 : 1);
+    let remaining = simDt;
+    while (remaining > 0) { const s = Math.min(2, remaining); step(s); remaining -= s; }
+    draw(dt);
+    panelTick += dt;
+    if (panelTick > 80) { panelTick = 0; updatePanel(); }
+    requestAnimationFrame(frame);
+  }
+  step(0); updatePanel(); draw(16);
+  requestAnimationFrame(frame);
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    const dark = document.documentElement.dataset.theme === 'dark' ||
+      (!document.documentElement.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+    mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'neutral', fontFamily: 'IBM Plex Sans, sans-serif', flowchart: { curve: 'basis' } });
+    if (!document.getElementById('p-circuit').hidden) mermaid.run({ querySelector: '#p-circuit pre.mermaid' });
+  }
+</script>
+
+</body>
+</html>

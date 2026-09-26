@@ -122,6 +122,12 @@ ol.steps li { margin: 8px 0; }
 pre.mermaid { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; overflow-x: auto; }
 #stalk { display: block; width: 100%; height: auto; color: var(--ink); touch-action: none; user-select: none; border-radius: 8px; background: var(--surface-2); }
 #stalk:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.checks li { display: grid; grid-template-columns: 20px 1fr; gap: 2px 8px; font-size: 14px; }
+.checks .ic { font: 700 14px var(--mono); }
+.checks .det { grid-column: 2; font: 12px/1.45 var(--mono); color: var(--ink-soft); }
+.ok { color: var(--ok); } .bad { color: var(--bad); } .warn { color: var(--amber); }
+.probe td:nth-child(2) { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
 [hidden] { display: none !important; }
 @media (prefers-reduced-motion: reduce) { .lamp i { transition: none; } }
 </style>
@@ -247,8 +253,21 @@ pre.mermaid { background: var(--surface); border: 1px solid var(--line); border-
         </div>
       </div>
     </div>
+    <div class="two" style="margin-top:18px">
+      <div class="card">
+        <h2>Design checks</h2>
+        <p class="lead" id="checks-sum">Running scenarios against the board&hellip;</p>
+        <ul class="checks" id="checks"></ul>
+        <p class="help" id="dd-src"></p>
+      </div>
+      <div class="card">
+        <h2>Multimeter</h2>
+        <p class="lead">Live voltages on the board's own nets, solved from the PCB file every step.</p>
+        <div class="tbl"><table class="probe"><thead><tr><th>Net</th><th>Volts</th><th>Where</th></tr></thead><tbody id="probe"></tbody></table></div>
+      </div>
+    </div>
     <ul class="help">
-      <li>The bench runs a line-for-line JavaScript copy of <code>s13_wiper.ino</code> on top of a model of the factory motor: ground-switched LO/HI brushes and an auto-stop contact that reads GND while sweeping and +12V at park.</li>
+      <li>Nothing about the board is hand-modeled. The circuit is built from the routed PCB file (every part, value, not-fitted flag and pad-to-net connection, cross-checked against the schematic) and solved every step. The firmware is a line-for-line copy of <code>s13_wiper.ino</code>; it reads its ADC pins and drives its outputs by the pin names in the source. The car side is the factory stalk (EL-17 / EL-59), the ground-switched motor with its auto-stop contact, the pump and the battery, wired through our harness map.</li>
       <li>Things to try: drag the stalk to INT and twist the ring. Flick OFF &rarr; LO &rarr; OFF for a single wipe. Switch HI to OFF mid-sweep and watch the blades still park. Hold WASH for three seconds, then turn the key off mid-sweep and back on. Cut the park wire while on LO to see the 8-second fault stop.</li>
     </ul>
   </section>
@@ -469,6 +488,7 @@ flowchart LR
   </section>
 </div>
 
+<script id="design-data" type="application/json">{"generated":"2026-09-26T14:41:11","source":"hardware/s13_wiper/s13_wiper.kicad_pcb","parity":{"ok":true,"checked":194,"mismatches":[]},"drc":{"unconnected":0,"violations":{"silk_overlap":1}},"firmware":{"consts":{"CH_LO":2,"CH_INT":3,"CH_HI":4,"CH_WASH":5,"CH_RING":6,"CONTACT_CLOSED_ADC":150,"RING_ADC_SHORT":6,"RING_ADC_LONG":308,"INT_DELAY_MIN_MS":2000,"INT_DELAY_MAX_MS":20000,"WASH_WIPE_START_MS":300,"WASH_MAX_MS":10000,"KICK_TIMEOUT_MS":1500,"PARK_FAULT_MS":8000,"SPEED_CHANGE_GAP_MS":60,"DEBOUNCE_MS":30,"PARK_DEBOUNCE_MS":5},"pins":{"PIN_PARK":"PB1","PIN_CFG_WIPES":"PB4","PIN_CFG_DIAG":"PB5","PIN_K_RUN":"PC0","PIN_K_HI":"PC1","PIN_K_WASH":"PC2","PIN_LED":"PC3","STK":[null,"PA1","PA2","PA3","PA4","PA5","PA6","PA7","PB0"]}},"parts":[{"ref":"C1","value":"47uF 50V","dnp":false,"pads":[{"num":"1","fn":"","net":"/+12V_LOG"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"C10","value":"100nF","dnp":false,"pads":[{"num":"1","fn":"","net":"/IN_STK1"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"C2","value":"100nF 50V","dnp":false,"pads":[{"num":"1","fn":"","net":"/+12V_LOG"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"C20","value":"100nF","dnp":false,"pads":[{"num":"1","fn":"","net":"/IN_STK2"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"C3","value":"22uF 16V tant","dnp":false,"pads":[{"num":"1","fn":"","net":"/+5V"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"C30","value":"100nF","dnp":false,"pads":[{"num":"1","fn":"","net":"/IN_STK3"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"C4","value":"100nF","dnp":false,"pads":[{"num":"1","fn":"","net":"/+5V"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"C40","value":"100nF","dnp":false,"pads":[{"num":"1","fn":"","net":"/IN_STK4"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"C5","value":"100nF","dnp":false,"pads":[{"num":"1","fn":"","net":"/+5V"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"C50","value":"100nF","dnp":false,"pads":[{"num":"1","fn":"","net":"/IN_STK5"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"C60","value":"100nF","dnp":false,"pads":[{"num":"1","fn":"","net":"/IN_STK6"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"C70","value":"100nF","dnp":false,"pads":[{"num":"1","fn":"","net":"/IN_STK7"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"C80","value":"100nF","dnp":false,"pads":[{"num":"1","fn":"","net":"/IN_STK8"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"C90","value":"100nF","dnp":false,"pads":[{"num":"1","fn":"","net":"/IN_PARK"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"D1","value":"S1M","dnp":false,"pads":[{"num":"1","fn":"K","net":"/+12V_LOG"},{"num":"2","fn":"A","net":"/+12V_IN"}]},{"ref":"D2","value":"SMBJ26CA","dnp":false,"pads":[{"num":"1","fn":"A1","net":"/+12V_IN"},{"num":"2","fn":"A2","net":"/GND"}]},{"ref":"D3","value":"S1M","dnp":false,"pads":[{"num":"1","fn":"K","net":"/PUMP_OUT"},{"num":"2","fn":"A","net":"/GND"}]},{"ref":"D4","value":"GRN","dnp":false,"pads":[{"num":"1","fn":"K","net":"/GND"},{"num":"2","fn":"A","net":"/LED_A"}]},{"ref":"F1","value":"20A mini blade","dnp":false,"pads":[{"num":"1","fn":"","net":"/+12V_IN"},{"num":"1","fn":"","net":"/+12V_IN"},{"num":"2","fn":"","net":"/+12V_MOT"},{"num":"2","fn":"","net":"/+12V_MOT"}]},{"ref":"F2","value":"0.2A PTC","dnp":false,"pads":[{"num":"1","fn":"","net":"/+12V_LOG"},{"num":"2","fn":"","net":"/STK_12V"}]},{"ref":"H1","value":"M3","dnp":false,"pads":[]},{"ref":"H2","value":"M3","dnp":false,"pads":[]},{"ref":"H3","value":"M3","dnp":false,"pads":[]},{"ref":"H4","value":"M3","dnp":false,"pads":[]},{"ref":"J1","value":"POWER","dnp":false,"pads":[{"num":"1","fn":"Pin_1","net":"/+12V_IN"},{"num":"2","fn":"Pin_2","net":"/+12V_IN"},{"num":"3","fn":"Pin_3","net":"/GND"},{"num":"4","fn":"Pin_4","net":"/GND"}]},{"ref":"J2","value":"WIPER_MOTOR","dnp":false,"pads":[{"num":"1","fn":"Pin_1","net":"/+12V_MOT"},{"num":"2","fn":"Pin_2","net":"/PARK"},{"num":"3","fn":"Pin_3","net":"/GND"},{"num":"4","fn":"Pin_4","net":"/MOTOR_LO"},{"num":"5","fn":"Pin_5","net":"/MOTOR_HI"},{"num":"6","fn":"Pin_6","net":"/GND"}]},{"ref":"J3","value":"WASHER_PUMP","dnp":false,"pads":[{"num":"1","fn":"Pin_1","net":"/PUMP_OUT"},{"num":"2","fn":"Pin_2","net":"/GND"}]},{"ref":"J4","value":"WIPER_STALK","dnp":false,"pads":[{"num":"1","fn":"Pin_1","net":"/STK1"},{"num":"2","fn":"Pin_2","net":"/STK2"},{"num":"3","fn":"Pin_3","net":"/STK3"},{"num":"4","fn":"Pin_4","net":"/STK4"},{"num":"5","fn":"Pin_5","net":"/STK5"},{"num":"6","fn":"Pin_6","net":"/STK6"},{"num":"7","fn":"Pin_7","net":"/STK7"},{"num":"8","fn":"Pin_8","net":"/STK8"},{"num":"9","fn":"Pin_9","net":"/GND"},{"num":"10","fn":"Pin_10","net":"/GND"},{"num":"11","fn":"Pin_11","net":"/STK_12V"},{"num":"12","fn":"Pin_12","net":"/GND"}]},{"ref":"J5","value":"PROG/DEBUG","dnp":false,"pads":[{"num":"1","fn":"Pin_1","net":"/+5V"},{"num":"2","fn":"Pin_2","net":"/UPDI"},{"num":"3","fn":"Pin_3","net":"/GND"},{"num":"4","fn":"Pin_4","net":"/DBG_TX"}]},{"ref":"K1","value":"G2RL-1-E 12VDC","dnp":false,"pads":[{"num":"11","fn":"","net":"/RUN_OUT"},{"num":"11","fn":"","net":"/RUN_OUT"},{"num":"12","fn":"","net":"/PARK"},{"num":"12","fn":"","net":"/PARK"},{"num":"14","fn":"","net":"/GND"},{"num":"14","fn":"","net":"/GND"},{"num":"A1","fn":"","net":"/+12V_LOG"},{"num":"A2","fn":"","net":"/K1_COIL"}]},{"ref":"K2","value":"G2RL-1-E 12VDC","dnp":false,"pads":[{"num":"11","fn":"","net":"/RUN_OUT"},{"num":"11","fn":"","net":"/RUN_OUT"},{"num":"12","fn":"","net":"/MOTOR_LO"},{"num":"12","fn":"","net":"/MOTOR_LO"},{"num":"14","fn":"","net":"/MOTOR_HI"},{"num":"14","fn":"","net":"/MOTOR_HI"},{"num":"A1","fn":"","net":"/+12V_LOG"},{"num":"A2","fn":"","net":"/K2_COIL"}]},{"ref":"K3","value":"G2RL-1-E 12VDC","dnp":false,"pads":[{"num":"11","fn":"","net":"/+12V_MOT"},{"num":"11","fn":"","net":"/+12V_MOT"},{"num":"12","fn":"","net":"unconnected-(K3-Pad12)_1"},{"num":"12","fn":"","net":"unconnected-(K3-Pad12)"},{"num":"14","fn":"","net":"/PUMP_OUT"},{"num":"14","fn":"","net":"/PUMP_OUT"},{"num":"A1","fn":"","net":"/+12V_LOG"},{"num":"A2","fn":"","net":"/K3_COIL"}]},{"ref":"R1","value":"1k","dnp":false,"pads":[{"num":"1","fn":"","net":"/LED"},{"num":"2","fn":"","net":"/LED_A"}]},{"ref":"R10","value":"2.2k","dnp":false,"pads":[{"num":"1","fn":"","net":"/+5V"},{"num":"2","fn":"","net":"/STK1"}]},{"ref":"R11","value":"33k","dnp":false,"pads":[{"num":"1","fn":"","net":"/STK1"},{"num":"2","fn":"","net":"/IN_STK1"}]},{"ref":"R12","value":"22k","dnp":true,"pads":[{"num":"1","fn":"","net":"/IN_STK1"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"R20","value":"2.2k","dnp":false,"pads":[{"num":"1","fn":"","net":"/+5V"},{"num":"2","fn":"","net":"/STK2"}]},{"ref":"R21","value":"33k","dnp":false,"pads":[{"num":"1","fn":"","net":"/STK2"},{"num":"2","fn":"","net":"/IN_STK2"}]},{"ref":"R22","value":"22k","dnp":true,"pads":[{"num":"1","fn":"","net":"/IN_STK2"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"R30","value":"2.2k","dnp":false,"pads":[{"num":"1","fn":"","net":"/+5V"},{"num":"2","fn":"","net":"/STK3"}]},{"ref":"R31","value":"33k","dnp":false,"pads":[{"num":"1","fn":"","net":"/STK3"},{"num":"2","fn":"","net":"/IN_STK3"}]},{"ref":"R32","value":"22k","dnp":true,"pads":[{"num":"1","fn":"","net":"/IN_STK3"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"R40","value":"2.2k","dnp":false,"pads":[{"num":"1","fn":"","net":"/+5V"},{"num":"2","fn":"","net":"/STK4"}]},{"ref":"R41","value":"33k","dnp":false,"pads":[{"num":"1","fn":"","net":"/STK4"},{"num":"2","fn":"","net":"/IN_STK4"}]},{"ref":"R42","value":"22k","dnp":true,"pads":[{"num":"1","fn":"","net":"/IN_STK4"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"R50","value":"2.2k","dnp":false,"pads":[{"num":"1","fn":"","net":"/+5V"},{"num":"2","fn":"","net":"/STK5"}]},{"ref":"R51","value":"33k","dnp":false,"pads":[{"num":"1","fn":"","net":"/STK5"},{"num":"2","fn":"","net":"/IN_STK5"}]},{"ref":"R52","value":"22k","dnp":true,"pads":[{"num":"1","fn":"","net":"/IN_STK5"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"R60","value":"2.2k","dnp":false,"pads":[{"num":"1","fn":"","net":"/+5V"},{"num":"2","fn":"","net":"/STK6"}]},{"ref":"R61","value":"33k","dnp":false,"pads":[{"num":"1","fn":"","net":"/STK6"},{"num":"2","fn":"","net":"/IN_STK6"}]},{"ref":"R62","value":"22k","dnp":true,"pads":[{"num":"1","fn":"","net":"/IN_STK6"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"R70","value":"2.2k","dnp":false,"pads":[{"num":"1","fn":"","net":"/+5V"},{"num":"2","fn":"","net":"/STK7"}]},{"ref":"R71","value":"33k","dnp":false,"pads":[{"num":"1","fn":"","net":"/STK7"},{"num":"2","fn":"","net":"/IN_STK7"}]},{"ref":"R72","value":"22k","dnp":true,"pads":[{"num":"1","fn":"","net":"/IN_STK7"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"R80","value":"2.2k","dnp":false,"pads":[{"num":"1","fn":"","net":"/+5V"},{"num":"2","fn":"","net":"/STK8"}]},{"ref":"R81","value":"33k","dnp":false,"pads":[{"num":"1","fn":"","net":"/STK8"},{"num":"2","fn":"","net":"/IN_STK8"}]},{"ref":"R82","value":"22k","dnp":true,"pads":[{"num":"1","fn":"","net":"/IN_STK8"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"R90","value":"2.2k","dnp":true,"pads":[{"num":"1","fn":"","net":"/+5V"},{"num":"2","fn":"","net":"/PARK"}]},{"ref":"R91","value":"33k","dnp":false,"pads":[{"num":"1","fn":"","net":"/PARK"},{"num":"2","fn":"","net":"/IN_PARK"}]},{"ref":"R92","value":"22k","dnp":false,"pads":[{"num":"1","fn":"","net":"/IN_PARK"},{"num":"2","fn":"","net":"/GND"}]},{"ref":"SW1","value":"DIP-2","dnp":false,"pads":[{"num":"1","fn":"","net":"/CFG_WIPES"},{"num":"2","fn":"","net":"/CFG_DIAG"},{"num":"3","fn":"","net":"/GND"},{"num":"4","fn":"","net":"/GND"}]},{"ref":"U1","value":"LM2936MP-5.0","dnp":false,"pads":[{"num":"1","fn":"VI","net":"/+12V_LOG"},{"num":"2","fn":"GND","net":"/GND"},{"num":"2","fn":"GND","net":"/GND"},{"num":"3","fn":"VO","net":"/+5V"}]},{"ref":"U2","value":"ATtiny1616-SN","dnp":false,"pads":[{"num":"1","fn":"VCC","net":"/+5V"},{"num":"2","fn":"PA4","net":"/IN_STK4"},{"num":"3","fn":"PA5","net":"/IN_STK5"},{"num":"4","fn":"PA6","net":"/IN_STK6"},{"num":"5","fn":"PA7","net":"/IN_STK7"},{"num":"6","fn":"PB5","net":"/CFG_DIAG"},{"num":"7","fn":"PB4","net":"/CFG_WIPES"},{"num":"8","fn":"PB3","net":"unconnected-(U2-PB3-Pad8)"},{"num":"9","fn":"PB2","net":"/DBG_TX"},{"num":"10","fn":"PB1","net":"/IN_PARK"},{"num":"11","fn":"PB0","net":"/IN_STK8"},{"num":"12","fn":"PC0","net":"/DRV_RUN"},{"num":"13","fn":"PC1","net":"/DRV_HI"},{"num":"14","fn":"PC2","net":"/DRV_WASH"},{"num":"15","fn":"PC3","net":"/LED"},{"num":"16","fn":"~{RESET}/PA0","net":"/UPDI"},{"num":"17","fn":"PA1","net":"/IN_STK1"},{"num":"18","fn":"PA2","net":"/IN_STK2"},{"num":"19","fn":"PA3","net":"/IN_STK3"},{"num":"20","fn":"GND","net":"/GND"}]},{"ref":"U3","value":"ULN2003ADR","dnp":false,"pads":[{"num":"1","fn":"I1","net":"/DRV_RUN"},{"num":"2","fn":"I2","net":"/DRV_HI"},{"num":"3","fn":"I3","net":"/DRV_WASH"},{"num":"4","fn":"I4","net":"/GND"},{"num":"5","fn":"I5","net":"/GND"},{"num":"6","fn":"I6","net":"/GND"},{"num":"7","fn":"I7","net":"/GND"},{"num":"8","fn":"GND","net":"/GND"},{"num":"9","fn":"COM","net":"/+12V_LOG"},{"num":"10","fn":"O7","net":"unconnected-(U3-O7-Pad10)"},{"num":"11","fn":"O6","net":"unconnected-(U3-O6-Pad11)"},{"num":"12","fn":"O5","net":"unconnected-(U3-O5-Pad12)"},{"num":"13","fn":"O4","net":"unconnected-(U3-O4-Pad13)"},{"num":"14","fn":"O3","net":"/K3_COIL"},{"num":"15","fn":"O2","net":"/K2_COIL"},{"num":"16","fn":"O1","net":"/K1_COIL"}]}]}</script>
 <script>
 (() => {
   // ---------------- tabs ----------------
@@ -519,10 +539,9 @@ flowchart LR
     `<tr${dnp ? ' class="dnp"' : ''}><td class="mono">${refs}</td><td class="mono">${qty}</td><td>${part}</td><td class="mono">${ds ? `<a href="${ds}" target="_blank" rel="noopener">${mpn}</a>` : mpn}</td><td>${why}</td></tr>`).join('');
 
   // ---------------- firmware port (s13_wiper.ino) ----------------
-  const K = { CONTACT_CLOSED_ADC: 150, RING_ADC_SHORT: 6, RING_ADC_LONG: 308, INT_DELAY_MIN_MS: 2000, INT_DELAY_MAX_MS: 20000,
-    WASH_WIPE_START_MS: 300, WASH_MAX_MS: 10000, KICK_TIMEOUT_MS: 1500, PARK_FAULT_MS: 8000, SPEED_CHANGE_GAP_MS: 60,
-    DEBOUNCE_MS: 30, PARK_DEBOUNCE_MS: 5 };
-  const CH_LO = 2, CH_INT = 3, CH_HI = 4, CH_WASH = 5, CH_RING = 6;
+  const DD = JSON.parse(document.getElementById('design-data').textContent);
+  const K = DD.firmware.consts;              // constants parsed from s13_wiper.ino by tools/build_sim.py
+  const { CH_LO, CH_INT, CH_HI, CH_WASH, CH_RING } = K;
   class Debounced {
     constructor(ms) { this.ms = ms; this.state = false; this.raw = false; this.changedAt = 0; }
     update(r, now) { if (r !== this.raw) { this.raw = r; this.changedAt = now; } else if (r !== this.state && now - this.changedAt >= this.ms) this.state = r; }
@@ -603,7 +622,6 @@ flowchart LR
   }
 
   // ---------------- car model ----------------
-  const LO_CYCLE_S = 1.55, HI_CYCLE_S = 1.02, PARK_ZONE = 0.035;
   const ui = {
     key: document.getElementById('key'), ring: document.getElementById('ring'), dip1: document.getElementById('dip1'),
     dip2: document.getElementById('dip2'), fast: document.getElementById('fast'), parkcut: document.getElementById('parkcut'),
@@ -695,63 +713,324 @@ flowchart LR
   document.getElementById('crank').addEventListener('click', () => { car.crankUntil = car.t + 1200; });
   document.getElementById('spike').addEventListener('click', () => { car.spikeAt = car.t; car.spikeUntil = car.t + 500; });
 
-  const car = { t: 0, phase: 0, speed: 0, powered: true, bootAt: 0, fw: newFirmware() };
+  // ---------------- board circuit, built from the routed PCB (design-data) ----------------
+  // Harness = how our sub-harness wires the factory parts to the board connectors (README / Connectors tab).
+  const HARNESS = {
+    stalk: { 13: ['J4', '1'], 14: ['J4', '2'], 15: ['J4', '3'], 16: ['J4', '4'], 18: ['J4', '5'], 19: ['J4', '6'], 17: ['J4', '9'], 20: ['J4', '10'] },
+    motor: { LG: ['J2', '1'], OR: ['J2', '2'], B: ['J2', '3'], LO: ['J2', '4'], HI: ['J2', '5'] },
+    pump: { pos: ['J3', '1'], neg: ['J3', '2'] },
+    supply: { pos: [['J1', '1'], ['J1', '2']], gnd: [['J1', '3'], ['J1', '4']] },
+  };
+  // FSM EL-59 stalk contacts per lever position; WASH (17-18) works in any position; ring 19-20.
+  const STALK_CONTACTS = { OFF: [[13, 14]], INT: [[13, 14], [15, 17]], LO: [[14, 17]], HI: [[16, 17]] };
+  const MOTOR = { R_LO: 1.2, R_HI: 0.9, RUN_A: 2.0 };   // winding resistance (ohm), current that means "turning"
+  const PUMP_R = 4.0, CONTACT_R = 0.3, COIL_R = 360;
+  const RELAY_PULL_IN = 8.4, RELAY_DROP = 1.2, TVS_CLAMP = 42, LDO_DROPOUT = 0.6, MCU_MIN_V = 2.7;
+
+  function parseOhms(v) {
+    const m = /^([\d.]+)\s*([kKmM]?)/.exec(v || '');
+    if (!m) return NaN;
+    return parseFloat(m[1]) * ({ k: 1e3, K: 1e3, m: 1e6, M: 1e6 }[m[2]] || 1);
+  }
+
+  function buildBoard(dd) {
+    const parts = Object.fromEntries(dd.parts.map(p => [p.ref, p]));
+    const nets = new Map();
+    const id = n => { if (!n) return -1; if (!nets.has(n)) nets.set(n, nets.size); return nets.get(n); };
+    dd.parts.forEach(p => p.pads.forEach(pd => pd.net && id(pd.net)));
+    const padNet = (ref, num) => parts[ref]?.pads.find(p => p.num === num)?.net;
+    const fnNet = (part, fn) => part?.pads.find(p => p.fn === fn || p.fn.split('/').includes(fn))?.net;
+    const byValue = re => dd.parts.filter(p => re.test(p.value) && !p.dnp);
+    const b = { nets, id, parts, missing: [] };
+    const need = (what, v) => { if (v === undefined || v === null) b.missing.push(what); return v; };
+
+    b.resistors = dd.parts.filter(p => /^R\d/.test(p.ref) && !p.dnp)
+      .map(p => ({ ref: p.ref, a: id(padNet(p.ref, '1')), b: id(padNet(p.ref, '2')), ohm: parseOhms(p.value) }));
+    b.fuses = dd.parts.filter(p => /^F\d/.test(p.ref) && !p.dnp)
+      .map(p => ({ ref: p.ref, a: id(padNet(p.ref, '1')), b: id(padNet(p.ref, '2')), ohm: /PTC/i.test(p.value) ? 1.0 : 0.005 }));
+    b.diodes = dd.parts.filter(p => /^D\d/.test(p.ref) && !p.dnp && !/SMBJ|TVS/i.test(p.value))
+      .map(p => ({ ref: p.ref, a: id(fnNet(p, 'A')), k: id(fnNet(p, 'K')), vf: /LED|GRN|RED|BLU/i.test(p.value) || p.pads.length === 2 && /LED/i.test(p.ref) ? 1.9 : 0.75 }));
+    b.diodes.forEach(d => { if (/GRN|LED/i.test(parts[d.ref].value)) d.vf = 1.9; });
+    b.relays = byValue(/G2RL/).sort((x, y) => x.ref.localeCompare(y.ref)).map(p => ({
+      ref: p.ref, a1: id(padNet(p.ref, 'A1')), a2: id(padNet(p.ref, 'A2')),
+      com: id(padNet(p.ref, '11')), nc: id(padNet(p.ref, '12')), no: id(padNet(p.ref, '14')) }));
+    const uln = need('ULN2003', byValue(/ULN200/)[0]);
+    b.uln = uln ? [1, 2, 3, 4, 5, 6, 7].map(i => ({ inp: id(fnNet(uln, 'I' + i)), out: id(fnNet(uln, 'O' + i)) })) : [];
+    const ldo = need('regulator', byValue(/LM2936/)[0]);
+    b.ldo = ldo && { vi: id(fnNet(ldo, 'VI')), vo: id(fnNet(ldo, 'VO')), gnd: id(fnNet(ldo, 'GND')) };
+    const mcu = need('ATtiny', byValue(/attiny/i)[0]);
+    b.mcu = mcu && { vcc: id(fnNet(mcu, 'VCC')), gnd: id(fnNet(mcu, 'GND')), pin: fn => id(fnNet(mcu, fn)) };
+    const sw = byValue(/DIP/)[0];
+    b.dip = sw ? [[id(padNet(sw.ref, '1')), id(padNet(sw.ref, '4'))], [id(padNet(sw.ref, '2')), id(padNet(sw.ref, '3'))]] : [];
+    const h = ([ref, pad]) => id(need(`${ref}.${pad}`, padNet(ref, pad)));
+    b.h = {
+      stalk: Object.fromEntries(Object.entries(HARNESS.stalk).map(([k, v]) => [k, h(v)])),
+      motor: Object.fromEntries(Object.entries(HARNESS.motor).map(([k, v]) => [k, h(v)])),
+      pump: { pos: h(HARNESS.pump.pos), neg: h(HARNESS.pump.neg) },
+      pos: HARNESS.supply.pos.map(h), gnd: HARNESS.supply.gnd.map(h),
+    };
+    b.ref = b.h.gnd[0];                       // chassis ground = reference node
+    b.names = [...nets.keys()];
+    return b;
+  }
+
+  // Nodal analysis: every element is a conductance or a Norton source to chassis.
+  function solveCircuit(b, st) {
+    const N = b.nets.size, ref = b.ref;
+    const dstate = st.diodes.slice();
+    let V = new Float64Array(N), uln = new Array(b.uln.length).fill(false), ldoOut = 0;
+    for (let iter = 0; iter < 8; iter++) {
+      const G = Array.from({ length: N }, () => new Float64Array(N)), I = new Float64Array(N);
+      const R = (a, c, ohm) => { if (a < 0 || c < 0 || a === c) return; const g = 1 / ohm; G[a][a] += g; G[c][c] += g; G[a][c] -= g; G[c][a] -= g; };
+      const src = (n, v, ohm) => { if (n < 0) return; const g = 1 / ohm; G[n][n] += g; I[n] += g * v; };
+      for (let n = 0; n < N; n++) G[n][n] += 1e-9;
+      if (st.vbat > 0) b.h.pos.forEach(n => src(n, st.vbat, 0.02));
+      b.h.gnd.forEach(n => R(ref, n, 0.001));
+      const m = b.h.motor;
+      R(ref, m.B, 0.01);                                   // motor case bolted to the body
+      R(m.LG, m.LO, MOTOR.R_LO); R(m.LG, m.HI, MOTOR.R_HI);
+      if (st.park === 'parked') R(m.OR, m.LG, 0.02); else if (st.park === 'sweeping') R(m.OR, m.B, 0.02);
+      R(b.h.pump.pos, b.h.pump.neg, PUMP_R);
+      st.contacts.forEach(([x, y]) => R(b.h.stalk[x], b.h.stalk[y], CONTACT_R));
+      R(b.h.stalk[19], b.h.stalk[20], st.ring);
+      b.resistors.forEach(r => R(r.a, r.b, r.ohm));
+      b.fuses.forEach(f => R(f.a, f.b, f.ohm));
+      b.relays.forEach((k, i) => { R(k.a1, k.a2, COIL_R); R(k.com, st.relays[i] ? k.no : k.nc, 0.005); });
+      b.diodes.forEach((d, i) => {
+        if (!dstate[i]) { R(d.a, d.k, 1e9); return; }
+        const g = 5; if (d.a >= 0 && d.k >= 0) { R(d.a, d.k, 1 / g); I[d.a] += g * d.vf; I[d.k] -= g * d.vf; }
+      });
+      if (b.ldo) src(b.ldo.vo, ldoOut, 0.05);
+      b.uln.forEach((c, i) => { if (uln[i]) src(c.out, 0.9, 0.3); });
+      if (b.mcu && st.mcuOn) {
+        const vcc = V[b.mcu.vcc] || 5;
+        Object.entries(st.outs).forEach(([fn, on]) => src(b.mcu.pin(fn), on ? vcc : 0, 25));
+        st.pullups.forEach(fn => R(b.mcu.pin(fn), b.mcu.vcc, 35000));
+      }
+      b.dip.forEach(([x, y], i) => { if (st.dips[i]) R(x, y, 0.1); });
+
+      // eliminate the reference node and solve
+      const idx = []; for (let n = 0; n < N; n++) if (n !== ref) idx.push(n);
+      const M = idx.map(r => idx.map(c => G[r][c])), rhs = idx.map(r => I[r]);
+      const x = gauss(M, rhs);
+      const nv = new Float64Array(N); idx.forEach((n, k) => { nv[n] = x[k]; });
+      V = nv;
+
+      let changed = false;
+      b.diodes.forEach((d, i) => {
+        const vd = (V[d.a] || 0) - (V[d.k] || 0);
+        const on = dstate[i] ? vd > d.vf - 0.02 : vd > d.vf;
+        if (on !== dstate[i]) { dstate[i] = on; changed = true; }
+      });
+      if (b.ldo) {
+        const vin = V[b.ldo.vi] - V[b.ldo.gnd];
+        const out = Math.max(0, Math.min(5, vin - LDO_DROPOUT));
+        if (Math.abs(out - ldoOut) > 1e-3) { ldoOut = out; changed = true; }
+      }
+      b.uln.forEach((c, i) => { const on = c.inp >= 0 && V[c.inp] > 2.0; if (on !== uln[i]) { uln[i] = on; changed = true; } });
+      if (!changed && iter > 0) break;
+    }
+    return { V, diodes: dstate, uln };
+  }
+
+  function gauss(A, bv) {
+    const n = A.length;
+    for (let c = 0; c < n; c++) {
+      let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+      [A[c], A[p]] = [A[p], A[c]]; [bv[c], bv[p]] = [bv[p], bv[c]];
+      const d = A[c][c] || 1e-30;
+      for (let r = c + 1; r < n; r++) {
+        const f = A[r][c] / d; if (!f) continue;
+        const Ar = A[r], Ac = A[c];
+        for (let k = c; k < n; k++) Ar[k] -= f * Ac[k];
+        bv[r] -= f * bv[c];
+      }
+    }
+    const x = new Float64Array(n);
+    for (let r = n - 1; r >= 0; r--) { let s = bv[r]; for (let k = r + 1; k < n; k++) s -= A[r][k] * x[k]; x[r] = s / (A[r][r] || 1e-30); }
+    return x;
+  }
+
+  // ---------------- car + board simulation (one instance drives the UI, others run the design checks) ----------------
+  const LO_CYCLE_S = 1.55, HI_CYCLE_S = 1.02, PARK_ZONE = 0.035;
+  const FWP = DD.firmware.pins;
+  class Sim {
+    constructor(board) {
+      this.b = board;
+      this.in = { key: true, engine: false, lever: 'OFF', wash: false, ring: 300, dip1: false, dip2: false, parkCut: false };
+      this.t = 0; this.phase = 0; this.speed = 0; this.powered = false; this.bootAt = 0; this.fw = newFirmware();
+      this.rel = board.relays.map(() => false); this.diodes = board.diodes.map(() => false);
+      this.crankUntil = -1; this.spikeAt = -1e9; this.spikeUntil = -1;
+      this.v = 0; this.vRaw = 0; this.cache = new Map(); this.parkEvents = []; this.leaveEvents = []; this.lastParked = true;
+      this.print = () => {};
+      this.sol = null;
+    }
+    parked() { return this.phase < PARK_ZONE || this.phase > 1 - PARK_ZONE; }
+    supply() {
+      if (!this.in.key) return { v: 0, raw: 0 };
+      let v = this.in.engine ? 14.2 : 12.4;
+      if (this.t < this.crankUntil) v = 6.5;
+      if (this.t < this.spikeUntil) {
+        const raw = 80 * Math.exp(-(this.t - this.spikeAt) / 120);
+        return { v: Math.max(v, Math.min(raw, TVS_CLAMP)), raw: Math.max(v, raw) };
+      }
+      return { v, raw: v };
+    }
+    state() {
+      const f = this.fw, on = this.powered;
+      const outs = on ? { [FWP.PIN_K_RUN]: f.kRun, [FWP.PIN_K_HI]: f.kHi, [FWP.PIN_K_WASH]: f.kWash, [FWP.PIN_LED]: f.led } : {};
+      const contacts = (STALK_CONTACTS[this.in.lever] || []).concat(this.in.wash ? [[17, 18]] : []);
+      return { vbat: this.v, relays: this.rel, diodes: this.diodes, mcuOn: on, outs,
+        pullups: on ? [FWP.PIN_CFG_WIPES, FWP.PIN_CFG_DIAG] : [], contacts, ring: this.in.ring,
+        park: this.in.parkCut ? 'open' : (this.parked() ? 'parked' : 'sweeping'), dips: [this.in.dip1, this.in.dip2] };
+    }
+    solve() {
+      const st = this.state();
+      const key = JSON.stringify(st);
+      let s = this.cache.get(key);
+      if (!s) { s = solveCircuit(this.b, st); if (this.cache.size > 400) this.cache.clear(); this.cache.set(key, s); }
+      this.diodes = s.diodes; this.sol = s;
+      return s.V;
+    }
+    volt(net) { const i = typeof net === 'number' ? net : this.b.nets.get(net); return i === undefined || i < 0 || !this.sol ? 0 : this.sol.V[i] - this.sol.V[this.b.ref]; }
+    step(dt) {
+      this.t += dt;
+      const sup = this.supply(); this.v = sup.v; this.vRaw = sup.raw;
+      let V = this.solve();
+      const m = this.b.mcu, vcc = m ? V[m.vcc] - V[m.gnd] : 0;
+      if (vcc >= MCU_MIN_V && !this.powered) { this.powered = true; this.bootAt = this.t; this.fw = newFirmware(); }
+      if (vcc < MCU_MIN_V) this.powered = false;
+      if (this.powered) {
+        const rd = fn => Math.max(0, Math.min(vcc, V[m.pin(fn)] - V[m.gnd]));
+        const adc = [0]; for (let i = 1; i <= 8; i++) adc.push(Math.round(1023 * rd(FWP.STK[i]) / vcc));
+        const io = { adc, parkHigh: rd(FWP.PIN_PARK) >= 0.7 * vcc, dip1: rd(FWP.PIN_CFG_WIPES) < 0.3 * vcc, dip2: rd(FWP.PIN_CFG_DIAG) < 0.3 * vcc };
+        fwLoop(this.fw, Math.floor(this.t - this.bootAt), io, this.print);
+        V = this.solve();
+      }
+      // relays: pull in above 8.4 V across the coil, drop out below 1.2 V
+      this.coilV = this.b.relays.map(k => V[k.a1] - V[k.a2]);
+      const next = this.rel.map((on, i) => on ? this.coilV[i] >= RELAY_DROP : this.coilV[i] >= RELAY_PULL_IN);
+      if (next.some((x, i) => x !== this.rel[i])) { this.rel = next; V = this.solve(); }
+      // motor: turns when current flows through a winding
+      const mo = this.b.h.motor;
+      this.vLO = V[mo.LG] - V[mo.LO]; this.vHI = V[mo.LG] - V[mo.HI];
+      this.iLO = this.vLO / MOTOR.R_LO; this.iHI = this.vHI / MOTOR.R_HI;
+      this.speed = this.iHI > MOTOR.RUN_A ? (1 / HI_CYCLE_S) * this.vHI / 13.5 : this.iLO > MOTOR.RUN_A ? (1 / LO_CYCLE_S) * this.vLO / 13.5 : 0;
+      this.mode = this.iHI > MOTOR.RUN_A ? 'HI' : this.iLO > MOTOR.RUN_A ? 'LO' : (Math.abs(this.vLO) < 0.5 && V[mo.LG] - V[this.b.ref] > 5 ? 'brake' : 'stop');
+      this.phase = (this.phase + this.speed * dt / 1000) % 1;
+      const pk = this.parked();
+      if (pk && !this.lastParked) this.parkEvents.push(this.t);
+      if (!pk && this.lastParked) this.leaveEvents.push(this.t);
+      this.lastParked = pk;
+      this.pump = (V[this.b.h.pump.pos] - V[this.b.h.pump.neg]) > 6;
+      const led = this.b.diodes.findIndex(d => /GRN|LED/i.test(this.b.parts[d.ref].value));
+      this.led = led >= 0 && this.diodes[led];
+    }
+    run(ms, dt = 2) { for (let t = 0; t < ms; t += dt) this.step(dt); }
+  }
+
+  // ---------------- design checks: scripted scenarios run against the PCB-derived circuit ----------------
+  function runChecks(board) {
+    const out = [];
+    const add = (name, ok, detail) => out.push({ name, ok, detail });
+    const fresh = (setup = {}) => { const s = new Sim(board); Object.assign(s.in, setup); s.run(300); return s; };
+    const gaps = s => s.leaveEvents.slice(1).map((t, i) => t - s.parkEvents[i]).filter(x => x > 0);
+
+    add('Schematic and PCB netlists match', DD.parity.ok,
+      DD.parity.ok ? `${DD.parity.checked} pads compared` : DD.parity.mismatches.slice(0, 3).join('; '));
+    const drcKinds = Object.entries(DD.drc.violations).filter(([k]) => !/^silk|text/.test(k));
+    add('PCB design rules (DRC)', DD.drc.unconnected === 0 && drcKinds.length === 0 ? true : 'warn',
+      `${DD.drc.unconnected} unconnected, ${drcKinds.length ? drcKinds.map(([k, n]) => `${n} ${k}`).join(', ') : 'no electrical violations'}`);
+    add('Every function found on the board', board.missing.length === 0, board.missing.length ? 'missing: ' + board.missing.join(', ') : 'regulator, MCU, ULN2003, relays, harness pins');
+
+    let s = fresh();
+    const v5 = s.volt(s.b.mcu.vcc);
+    add('Key on: 5 V rail up, everything off', Math.abs(v5 - 5) < 0.15 && !s.rel.some(Boolean) && s.speed === 0,
+      `5V rail ${v5.toFixed(2)} V, logic in ${s.volt(s.b.ldo.vi).toFixed(1)} V, relays off, blades parked`);
+
+    const dec = [];
+    for (const lever of ['OFF', 'INT', 'LO', 'HI']) {
+      s = fresh({ lever }); const f = s.fw;
+      const got = [f.swHi.state && 'HI', f.swLo.state && 'LO', f.swInt.state && 'INT'].filter(Boolean).join('+') || 'OFF';
+      dec.push([lever, got]);
+    }
+    s = fresh({ wash: true });
+    dec.push(['WASH', s.fw.swWash.state ? 'WASH' : 'none']);
+    add('Stalk positions reach the right MCU pins', dec.every(([a, b]) => a === b), dec.map(([a, b]) => `${a}→${b}`).join('  '));
+
+    const d14 = intDelayMs(fresh({ ring: 14 }).fw), d950 = intDelayMs(fresh({ ring: 950 }).fw);
+    add('INT ring reads across its range', Math.abs(d14 - 2000) < 300 && Math.abs(d950 - 20000) < 600,
+      `14 Ω → ${(d14 / 1000).toFixed(1)} s, 950 Ω → ${(d950 / 1000).toFixed(1)} s`);
+
+    s = fresh({ lever: 'LO' }); s.run(500);
+    add('LO grounds the LO brush only', s.mode === 'LO' && s.iHI < 0.1, `LO winding ${s.iLO.toFixed(1)} A (stall model), HI ${s.iHI.toFixed(2)} A, K1 coil ${s.coilV[0].toFixed(1)} V`);
+    s = fresh({ lever: 'HI' }); s.run(500);
+    add('HI grounds the HI brush only', s.mode === 'HI' && s.iLO < 0.1, `HI winding ${s.iHI.toFixed(1)} A, LO ${s.iLO.toFixed(2)} A`);
+
+    s = fresh({ lever: 'HI' }); s.run(500); s.in.lever = 'OFF'; const midway = !s.parked(); s.run(2500);
+    add('OFF mid-sweep finishes and brakes at park', midway && s.parked() && s.speed === 0 && s.mode === 'brake',
+      `left park: ${midway}, ended ${s.parked() ? 'parked' : 'mid-glass'}, brush ${s.mode}`);
+
+    s = fresh({ lever: 'INT', ring: 14 }); s.run(9000);
+    let g = gaps(s);
+    add('INT fastest: 2 s between wipes', s.leaveEvents[0] < 400 && g.length >= 2 && g.every(x => Math.abs(x - 2000) < 250),
+      `first wipe at ${(s.leaveEvents[0] / 1000 || 0).toFixed(2)} s, pauses ${g.map(x => (x / 1000).toFixed(2)).join(', ')} s`);
+    s = fresh({ lever: 'INT', ring: 950 }); s.run(26000);
+    g = gaps(s);
+    add('INT slowest: 20 s between wipes', g.length >= 1 && g.every(x => Math.abs(x - 20000) < 600), `pause ${g.map(x => (x / 1000).toFixed(1)).join(', ')} s`);
+
+    for (const [dip, want] of [[false, 3], [true, 2]]) {
+      s = fresh({ wash: true, dip1: dip }); s.run(1500);
+      const pumped = s.pump && s.speed > 0;
+      s.in.wash = false; const rel = s.t, before = s.parkEvents.length; s.run(9000);
+      const after = s.parkEvents.filter(t => t > rel).length;
+      add(`WASH: pump, then ${want} wipes${dip ? ' (DIP 1 on)' : ''}`, pumped && after === want && !s.pump && s.speed === 0,
+        `pump ${pumped ? 'on' : 'OFF'} while held, ${after} wipes after release`);
+    }
+
+    s = fresh({ wash: true }); s.run(9500); const p1 = s.pump; s.run(1000); const p2 = s.pump;
+    add('Pump safety cut-off at 10 s', p1 && !p2, `pump at 9.8 s: ${p1 ? 'on' : 'off'}, at 10.8 s: ${p2 ? 'on' : 'off'}`);
+
+    s = fresh({ lever: 'LO', parkCut: true }); s.run(7000); const r1 = s.speed > 0; s.run(1500);
+    add('Cut park wire: stops within 8 s, fault LED', r1 && s.speed === 0 && s.fw.fault, `running at 7.3 s: ${r1}, stopped at 8.8 s: ${s.speed === 0}, fault ${s.fw.fault}`);
+
+    s = fresh({ lever: 'LO' }); s.run(800); s.crankUntil = s.t + 1200;
+    let minCoil = 99, minVcc = 99, stayed = true;
+    for (let t = 0; t < 1200; t += 2) { s.step(2); minCoil = Math.min(minCoil, s.coilV[0]); minVcc = Math.min(minVcc, s.volt(s.b.mcu.vcc)); stayed = stayed && s.rel[0] && s.powered; }
+    add('Cranking dip to 6.5 V: keeps wiping', stayed, `K1 coil min ${minCoil.toFixed(1)} V (holds above 1.2 V), 5V rail min ${minVcc.toFixed(2)} V`);
+
+    s = fresh({ lever: 'LO' }); s.spikeAt = s.t; s.spikeUntil = s.t + 500; let peak = 0;
+    for (let t = 0; t < 500; t += 2) { s.step(2); peak = Math.max(peak, s.v); }
+    add('Load dump clamped below regulator limit', peak <= TVS_CLAMP + 0.01 && s.powered, `80 V spike clamped to ${peak.toFixed(0)} V by D2 (LM2936 rated 60 V)`);
+
+    s = fresh({ lever: 'LO' }); s.run(700); s.in.key = false; s.run(400); const stuck = !s.parked();
+    s.in.lever = 'OFF'; s.in.key = true; s.run(2500);
+    add('Key off mid-sweep: parks at next key-on', stuck && s.parked() && s.speed === 0, `stopped mid-glass: ${stuck}, parked after key-on: ${s.parked()}`);
+    return out;
+  }
+
+  const board = buildBoard(DD);
+  const car = new Sim(board);
   const serialLines = [];
   const serialEl = document.getElementById('serial');
-  function print(line) { serialLines.push(line); if (serialLines.length > 40) serialLines.shift(); serialDirty = true; }
   let serialDirty = false;
-
+  function print(line) { serialLines.push(line); if (serialLines.length > 40) serialLines.shift(); serialDirty = true; }
+  car.print = print;
   function stalkPos() { return POSITIONS[lever]; }
-  function inParkZone() { return car.phase < PARK_ZONE || car.phase > 1 - PARK_ZONE; }
-
-  function readInputs() {
-    const pos = stalkPos();
-    const lo = pos === 'LO';
-    const contacts = { 2: lo, 3: pos === 'INT', 4: pos === 'HI', 5: held.wash };
-    const adc = new Array(9).fill(1023);
-    for (const ch of [2, 3, 4, 5]) if (contacts[ch]) adc[ch] = 0;
-    const r = +ui.ring.value;
-    adc[6] = Math.round(1023 * r / (2200 + r));
-    // Auto-stop: +12V at park, GND while sweeping. Disconnected -> 22k pull-down reads low.
-    const parkNet = ui.parkcut.checked ? 'open' : (inParkZone() ? (ui.key.checked ? '12V' : 'open') : 'GND');
-    return { adc, parkNet, parkHigh: parkNet === '12V', dip1: ui.dip1.checked, dip2: ui.dip2.checked };
+  function inParkZone() { return car.parked(); }
+  function syncInputs() {
+    Object.assign(car.in, { key: ui.key.checked, engine: ui.engine.checked, lever: POSITIONS[lever], wash: held.wash,
+      ring: +ui.ring.value, dip1: ui.dip1.checked, dip2: ui.dip2.checked, parkCut: ui.parkcut.checked });
   }
-
-  // 12V system: G2RL coil must-operate 70% (8.4 V), must-release 10% (1.2 V); LM2936 needs ~5.6 V in for 5 V out.
-  const RELAY_PULL_IN = 8.4, RELAY_DROP = 1.2, LDO_MIN_IN = 5.6, TVS_CLAMP = 42;
-  function supplyVolts() {
-    if (!ui.key.checked) return { v: 0, raw: 0 };
-    let v = ui.engine.checked ? 14.2 : 12.4;
-    if (car.t < car.crankUntil) v = 6.5;
-    if (car.t < car.spikeUntil) {
-      const raw = 80 * Math.exp(-(car.t - car.spikeAt) / 120);
-      return { v: Math.max(v, Math.min(raw, TVS_CLAMP)), raw: Math.max(v, raw) };
-    }
-    return { v, raw: v };
-  }
-  car.crankUntil = 0; car.spikeUntil = 0; car.spikeAt = 0; car.rel = [false, false, false]; car.v = 12.4; car.vRaw = 12.4;
-  function step(dtMs) {
-    car.t += dtMs;
-    const io = readInputs();
-    const sup = supplyVolts(); car.v = sup.v; car.vRaw = sup.raw;
-    const logicOk = car.v - 0.8 >= LDO_MIN_IN;          // after the D1 reverse-polarity diode
-    if (logicOk && !car.powered) { car.powered = true; car.bootAt = car.t; car.fw = newFirmware(); }
-    if (!logicOk) car.powered = false;
-    const f = car.fw;
-    if (car.powered) fwLoop(f, Math.floor(car.t - car.bootAt), io, print);
-    const cmd = [car.powered && f.kRun, car.powered && f.kHi, car.powered && f.kWash];
-    const coilV = car.v - 0.8 - 0.9;                     // D1 drop, ULN2003 saturation
-    car.rel = car.rel.map((on, i) => cmd[i] && (on ? coilV >= RELAY_DROP : coilV >= RELAY_PULL_IN));
-    const [k1, k2, k3] = car.rel;
-
-    // Brush drive: K1 energized -> GND; released -> follows the auto-stop contact.
-    let brush = 'open';
-    if (car.v > 0) brush = k1 ? 'GND' : (io.parkNet === 'open' ? 'open' : io.parkNet);
-    let target = 0;
-    if (brush === 'GND') target = (1 / (k2 ? HI_CYCLE_S : LO_CYCLE_S)) * Math.min(car.v, 16) / 13.5;   // motor speed follows voltage
-    car.speed = target;                            // a wiper gearmotor spins up in a few ms; brake is immediate
-    car.phase = (car.phase + car.speed * dtMs / 1000) % 1;
-    car.brush = brush; car.k = [k1, k2, k3]; car.io = io;
+  const PROBES = [['+12V_IN', 'J1 battery in'], ['+12V_MOT', 'after F1 fuse'], ['+12V_LOG', 'after D1'], ['+5V', 'regulator out'],
+    ['IN_STK3', 'INT at MCU'], ['IN_STK6', 'ring at MCU'], ['IN_PARK', 'park at MCU'], ['PARK', 'auto-stop wire'],
+    ['RUN_OUT', 'K1 common'], ['MOTOR_LO', 'LO brush'], ['MOTOR_HI', 'HI brush'], ['PUMP_OUT', 'pump +']]
+    .filter(([n]) => board.nets.has('/' + n));
+  const probeEl = document.getElementById('probe');
+  function updateProbe() {
+    const rows = PROBES.map(([n, w]) => `<tr><td class="mono">${n}</td><td>${car.volt('/' + n).toFixed(2)}</td><td>${w}</td></tr>`);
+    (car.coilV || []).forEach((v, i) => rows.push(`<tr><td class="mono">${board.relays[i].ref} coil</td><td>${v.toFixed(2)}</td><td>${car.rel[i] ? 'pulled in' : 'released'}</td></tr>`));
+    probeEl.innerHTML = rows.join('');
   }
 
   // ---------------- rendering ----------------
@@ -817,7 +1096,7 @@ flowchart LR
       if (drops.length > 2600) drops.splice(0, drops.length - 2600);
     }
     // washer fluid
-    if (car.k && car.k[2]) {
+    if (car.pump) {
       for (let i = 0; i < 6 * dtMs / 16; i++) {
         for (const nx of [0.42, 0.58]) spray.push({ x: W * nx, y: H * 0.9, vx: (Math.random() - 0.5) * 3.2, vy: -(10 + Math.random() * 6), life: 26 + Math.random() * 18 });
       }
@@ -860,7 +1139,7 @@ flowchart LR
     ctx.font = '600 22px "IBM Plex Mono", monospace';
     ctx.fillStyle = 'rgba(230,238,245,.8)';
     const rpm = car.speed ? Math.round(car.speed * 60) : 0;
-    ctx.fillText(car.powered ? `${rpm} wipes/min` : 'KEY OFF', 36, 46);
+    ctx.fillText(car.v > 0 ? `${rpm} wipes/min · ${car.v.toFixed(1)} V` : 'KEY OFF', 36, 46);
   }
 
   // ---------------- status panel ----------------
@@ -870,21 +1149,21 @@ flowchart LR
   const fwEl = document.getElementById('fwstate'), ringRead = document.getElementById('ring-read'), pinsEl = document.getElementById('stalk-pins');
 
   function updatePanel() {
-    const f = car.fw, io = car.io || readInputs();
+    const f = car.fw;
     const running = car.speed > 0;
-    lamp(L.motor, running ? 'on' : '', !car.powered ? 'No power' : running ? (car.k[1] ? 'Running HI' : 'Running LO') : (car.brush === '12V' ? 'Braked at park' : 'Stopped'));
+    lamp(L.motor, running ? 'on' : '', car.v === 0 ? 'No power' : car.mode === 'HI' ? 'Running HI' : car.mode === 'LO' ? 'Running LO' : car.mode === 'brake' ? 'Braked at park' : 'Stopped');
     const parkTxt = ui.parkcut.checked ? 'Wire cut' : (inParkZone() ? 'Parked (+12V)' : 'Sweeping (GND)');
     lamp(L.park, ui.parkcut.checked ? 'bad' : (inParkZone() ? 'good' : 'on'), parkTxt);
-    lamp(L.k1, car.k[0] ? 'on' : '', car.k[0] ? 'Brush to GND' : 'To auto-stop');
-    lamp(L.k2, car.k[1] ? 'on' : '', car.k[1] ? 'HI brush' : 'LO brush');
-    lamp(L.k3, car.k[2] ? 'on' : '', car.k[2] ? 'Pump on' : 'Off');
+    lamp(L.k1, car.rel[0] ? 'on' : '', car.rel[0] ? 'Brush to GND' : 'To auto-stop');
+    lamp(L.k2, car.rel[1] ? 'on' : '', car.rel[1] ? 'HI brush' : 'LO brush');
+    lamp(L.k3, car.rel[2] ? 'on' : '', car.rel[2] ? 'Pump on' : 'Off');
     const spiking = car.vRaw > car.v + 0.5;
     lamp(L.v, car.v < RELAY_PULL_IN && car.v > 0 ? 'bad' : spiking ? 'bad' : car.v > 0 ? 'good' : '',
       car.v === 0 ? 'Key off' : spiking ? `${car.vRaw.toFixed(0)} V → ${car.v.toFixed(0)} V (TVS)` : `${car.v.toFixed(1)} V`);
-    lamp(L.led, car.powered && f.led ? (f.fault ? 'bad' : 'on') : '', f.fault ? 'Fault (fast flash)' : (car.powered && f.led ? 'On' : 'Off'));
+    lamp(L.led, car.led ? (f.fault ? 'bad' : 'on') : '', f.fault && car.powered ? 'Fault (fast flash)' : (car.led ? 'On' : 'Off'));
 
     const r = +ui.ring.value;
-    const adc = Math.round(1023 * r / (2200 + r));
+    const adc = car.powered ? car.fw.adc[CH_RING] : Math.round(1023 * r / (2200 + r));
     const tmp = { adc: [0, 0, 0, 0, 0, 0, adc] };
     ringRead.textContent = `${r} Ω · ADC ${adc} · ${(intDelayMs(tmp) / 1000).toFixed(1)} s`;
 
@@ -910,6 +1189,7 @@ flowchart LR
       ['pump timer', f.washing ? `${Math.min(10, (now - f.washStartedAt) / 1000).toFixed(1)} / 10 s` : '—'],
       ['fault', f.fault ? 'PARK FAULT' : 'none'],
     ];
+    updateProbe();
     fwEl.innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
 
     if (serialDirty) {
@@ -927,14 +1207,27 @@ flowchart LR
     let dt = Math.min(100, ts - last); last = ts;
     const simDt = dt * (ui.fast.checked ? 2 : 1);
     let remaining = simDt;
-    while (remaining > 0) { const s = Math.min(2, remaining); step(s); remaining -= s; }
+    syncInputs();
+    while (remaining > 0) { const s = Math.min(2, remaining); car.step(s); remaining -= s; }
     draw(dt);
     panelTick += dt;
     if (panelTick > 80) { panelTick = 0; updatePanel(); }
     requestAnimationFrame(frame);
   }
-  step(0); updatePanel(); draw(16);
+  syncInputs(); car.step(2); updatePanel(); draw(16);
   requestAnimationFrame(frame);
+  setTimeout(() => {
+    const t0 = performance.now();
+    let res;
+    try { res = runChecks(board); } catch (e) { res = [{ name: 'Checks crashed', ok: false, detail: String(e) }]; }
+    const pass = res.filter(r => r.ok === true).length, warn = res.filter(r => r.ok === 'warn').length, fail = res.length - pass - warn;
+    document.getElementById('checks-sum').textContent = `${pass} of ${res.length} passed` + (warn ? `, ${warn} warning` : '') + (fail ? `, ${fail} failed` : '') + ` (${((performance.now() - t0) / 1000).toFixed(1)} s to run)`;
+    document.getElementById('checks').innerHTML = res.map(r => {
+      const c = r.ok === true ? 'ok' : r.ok === 'warn' ? 'warn' : 'bad', ic = r.ok === true ? '\u2713' : r.ok === 'warn' ? '!' : '\u2717';
+      return `<li><span class="ic ${c}">${ic}</span><span>${r.name}</span><span class="det">${r.detail}</span></li>`;
+    }).join('');
+    document.getElementById('dd-src').textContent = `Board data: ${DD.source}, built ${DD.generated.replace('T', ' ')}; ${DD.parts.length} parts, ${board.nets.size} nets.`;
+  }, 60);
 })();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>

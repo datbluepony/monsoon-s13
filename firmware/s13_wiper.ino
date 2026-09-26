@@ -25,7 +25,7 @@ const uint16_t CONTACT_CLOSED_ADC = 150;   // < ~0.7 V = contact closed (ring to
 const uint16_t RING_ADC_SHORT = 6;         // 14 ohm end  -> shortest delay (swap if ring feels backwards)
 const uint16_t RING_ADC_LONG = 308;        // 950 ohm end -> longest delay
 const uint32_t INT_DELAY_MIN_MS = 2000;
-const uint32_t INT_DELAY_MAX_MS = 15000;
+const uint32_t INT_DELAY_MAX_MS = 12000;
 
 const uint32_t WASH_WIPE_START_MS = 300;   // squirt this long before the blades start
 const uint32_t WASH_MAX_MS = 10000;        // pump safety cut-off
@@ -94,7 +94,7 @@ uint32_t intDelayMs() {
   int32_t absSpan = span >= 0 ? span : -span;
   if (absSpan == 0) return INT_DELAY_MIN_MS;
   // Exponential taper: equal twists give equal *ratios*, so the short delays you use most in
-  // rain get most of the ring (half a twist = sqrt(min*max), about 5.5 s).
+  // rain get most of the ring (half a twist = sqrt(min*max), about 4.9 s).
   float frac = (float)pos / absSpan;
   return (uint32_t)(INT_DELAY_MIN_MS * pow((float)INT_DELAY_MAX_MS / INT_DELAY_MIN_MS, frac) + 0.5f);
 }

@@ -15,6 +15,6 @@ Browser simulator for **MONSOON S13 v1.0**, a standalone wiper / washer controll
 
 `firmware/s13_wiper.ino` is the program that runs on the board's ATtiny1616; `firmware/monsoon_s13_v1.0_attiny1616.hex` is the same program compiled and ready to flash. It is loaded once through the board's J5 header with a UPDI programmer (Arduino IDE + megaTinyCore: chip ATtiny1616, 8 MHz internal, programmer SerialUPDI). After that the board runs on its own.
 
-Wash sequence: fluid + slow wipes while held; on release **fast, fast, slow** (DIP 1: **fast, slow**), then a slow drip wipe 4 s later. INT: 2-15 s with a tapered ring.
+Wash sequence: fluid + slow wipes while held; on release **fast, fast, slow** (DIP 1: **fast, slow**), then a slow drip wipe 4 s later. INT: 2-12 s with a tapered ring (half twist about 4.9 s).
 
 Single file: open `index.html` in any browser. The embedded board data is regenerated from the KiCad project with `tools/build_sim.py`.
